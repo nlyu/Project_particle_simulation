@@ -1,0 +1,42 @@
+#!/bin/bash -l
+#SBATCH -C haswell
+#SBATCH -p debug            # change this option for non-debug runs
+#SBATCH -N 1                # you'll never need more than 1 node for the serial code
+#SBATCH -t 00:20:00         # adjust the amount of time as necessary
+#SBATCH -J auto-openmp32
+#SBATCH -o auto-openmp32.%j.stdout
+#SBATCH -e auto-openmp32.%j.error
+
+rm openmp.txt
+srun -n 1 -c 1 ./serial -n 500 -no -s openmp.txt
+export OMP_NUM_THREADS=1
+srun -n 1 -c 1 ./openmp -p 1 -n 500 -no -s openmp.txt
+export OMP_NUM_THREADS=2
+srun -n 1 -c 2 ./openmp -p 2 -n 500 -no -s openmp.txt
+export OMP_NUM_THREADS=4
+srun -n 1 -c 4 ./openmp -p 4 -n 500 -no -s openmp.txt
+export OMP_NUM_THREADS=6
+srun -n 1 -c 6 ./openmp -p 6 -n 500 -no -s openmp.txt
+export OMP_NUM_THREADS=12
+srun -n 1 -c 12 ./openmp -p 12 -n 500 -no -s openmp.txt
+export OMP_NUM_THREADS=18
+srun -n 1 -c 18 ./openmp -p 18 -n 500 -no -s openmp.txt
+export OMP_NUM_THREADS=24
+srun -n 1 -c 24 ./openmp -p 24 -n 500 -no -s openmp.txt
+export OMP_NUM_THREADS=32
+srun -n 1 -c 32 ./openmp -p 24 -n 500 -no -s openmp.txt
+export OMP_NUM_THREADS=2
+srun -n 1 -c 2 ./openmp -p 2 -n 1000 -no -s openmp.txt
+export OMP_NUM_THREADS=4
+srun -n 1 -c 4 ./openmp -p 4 -n 2000 -no -s openmp.txt
+export OMP_NUM_THREADS=6
+srun -n 1 -c 6 ./openmp -p 6 -n 3000 -no -s openmp.txt
+export OMP_NUM_THREADS=12
+srun -n 1 -c 12 ./openmp -p 12 -n 6000 -no -s openmp.txt
+export OMP_NUM_THREADS=18
+srun -n 1 -c 18 ./openmp -p 18 -n 9000 -no -s openmp.txt
+export OMP_NUM_THREADS=24
+srun -n 1 -c 24 ./openmp -p 24 -n 12000 -no -s openmp.txt
+export OMP_NUM_THREADS=32
+srun -n 1 -c 32 ./openmp -p 24 -n 16000 -no -s openmp.txt
+./autograder -v openmp -s openmp.txt

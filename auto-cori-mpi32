@@ -1,0 +1,27 @@
+#!/bin/bash -l
+#SBATCH -C haswell
+#SBATCH -p debug 				# change this option for non-debug runs
+#SBATCH -N 32					  # adjust the number of nodes per test (e.g. start with 1, 2, ...)
+#SBATCH -t 00:20:00		  # adjust the amount of time as necessary
+#SBATCH -J auto-mpi32
+#SBATCH -o auto-mpi32.%j.stdout
+#SBATCH -e auto-mpi32.%j.error
+
+rm mpi.txt
+srun -n 1 -N 1 ./serial -n 500 -no -s mpi.txt
+srun -n 1 -N 1 ./mpi -p 1 -n 500 -no -s mpi.txt
+srun -n 2 -N 2 ./mpi -p 2 -n 500 -no -s mpi.txt
+srun -n 4 -N 4 ./mpi -p 4 -n 500 -no -s mpi.txt
+srun -n 6 -N 6 ./mpi -p 6 -n 500 -no -s mpi.txt
+srun -n 12 -N 12 ./mpi -p 12 -n 500 -no -s mpi.txt
+srun -n 16 -N 16 ./mpi -p 16 -n 500 -no -s mpi.txt
+srun -n 24 -N 24 ./mpi -p 24 -n 500 -no -s mpi.txt
+srun -n 32 -N 32 ./mpi -p 32 -n 500 -no -s mpi.txt
+srun -n 2 -N 2 ./mpi -p 2 -n 1000 -no -s mpi.txt
+srun -n 4 -N 4 ./mpi -p 4 -n 2000 -no -s mpi.txt
+srun -n 6 -N 6 ./mpi -p 6 -n 3000 -no -s mpi.txt
+srun -n 12 -N 12 ./mpi -p 12 -n 6000 -no -s mpi.txt
+srun -n 16 -N 16 ./mpi -p 16 -n 8000 -no -s mpi.txt
+srun -n 24 -N 24 ./mpi -p 24 -n 12000 -no -s mpi.txt
+srun -n 32 -N 32 ./mpi -p 32 -n 16000 -no -s mpi.txt
+./autograder -v mpi -s mpi.txt
