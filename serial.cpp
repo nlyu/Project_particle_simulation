@@ -30,7 +30,7 @@ void set_bin(int n, bin * bins){
 
     int i = 0;
     //clear all bins
-    for(i = 0; i < num_bins; ++i){
+    for(i = 0; i < bin_num; ++i){
         bins[i].num_par = 0;
     }
 
@@ -150,7 +150,7 @@ int main( int argc, char **argv )
     }
 
     set_bin(n, bins);
-    
+
     printf("finish particle initialization\n");
     //
     //  simulate a number of time steps
