@@ -35,7 +35,7 @@ void set_bin(int n, bin * bins){
 
     //fill the particles in bins
     for(i = 0; i < n; ++i){
-        int par_idx = particle_ids[i]; //get particles by particle id
+        int par_idx = particle_bin[i]; //get particles by particle id
         int cur_par = bins[par_idx].num_par; //get numbers of particle in bin
         bins[par_idx].par_id[cur_par] = i;
         bins[par_idx].num_par++;
@@ -68,8 +68,8 @@ void init_bins(int n, bin * bins){
             _x = x + x_dir[j];
             _y = y + y_dir[j];
             if(_x >= 0 && _y >= 0 && _x < bin_size && _y < bin_size){
-                bin[i].nei_id[k] = _x + _y * bin_size
-                bin[i].num_nei++;
+                bins[i].nei_id[k] = _x + _y * bin_size
+                bins[i].num_nei++;
             }
         }
 
@@ -142,7 +142,8 @@ int main( int argc, char **argv )
         particles[i].ax = 0;
         particles[i].ay = 0;
         //assign the particle to the bin
-        particle_bin[i] = (int) (floor(particles[i].x / cutoff) * bin_size + floor(particles[i].y / cutoff);
+        particle_bin[i] = (int) (floor(particles[i].x / cutoff) * bin_size +
+                                 floor(particles[i].y / cutoff));
     }
 
     set_bin(n, bins);
@@ -171,14 +172,14 @@ int main( int argc, char **argv )
             particles[i].ax = particles[i].ay = 0;
         }
 
-        for(i, bin_num){
+        for(int i = 0; i < bin_num; ++i){
             apply_force_bin(particles, bins, i, &dmin, &davg, &navg);
         }
 
         //
         //  move particles
         //
-        for( int i = 0; i < n; ++i){
+        for(int i = 0; i < n; ++i){
             move(particles[i]);
             particles[i].ax = 0;
             particles[i].ay = 0;
@@ -188,7 +189,7 @@ int main( int argc, char **argv )
         }
 
         //let bin get the new particle
-        set_bin(bins, n);
+        set_bin(n, bins);
 
         if( find_option( argc, argv, "-no" ) == -1 )
         {
