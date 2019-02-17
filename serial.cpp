@@ -139,7 +139,7 @@ int main( int argc, char **argv )
     init_bins(n, bins);
     init_particles(n, particles);
 
-    printf("finish initialization\n", );
+    printf("finish bin initialization\n");
 
     for(int i = 0; i < n; ++i){
         particles[i].ax = 0;
@@ -150,7 +150,8 @@ int main( int argc, char **argv )
     }
 
     set_bin(n, bins);
-
+    
+    printf("finish particle initialization\n");
     //
     //  simulate a number of time steps
     //
