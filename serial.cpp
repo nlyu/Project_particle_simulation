@@ -30,12 +30,12 @@ void set_bin(int n, bin * bins){
 
     int i = 0;
     //clear all bins
-    for(i = 0; i < bin_num; ++i){
+    for(i = 0; i < bin_num; i++){
         bins[i].num_par = 0;
     }
 
     //fill the particles in bins
-    for(i = 0; i < n; ++i){
+    for(i = 0; i < n; i++){
         int par_idx = particle_bin[i]; //get particles by particle id
         int cur_par = bins[par_idx].num_par; //get numbers of particle in bin
         bins[par_idx].par_id[cur_par] = i;
@@ -56,7 +56,7 @@ void init_bins(int n, bin * bins){
     int i, j, x, y, _x, _y;
     bins = (bin *) malloc(bin_num * sizeof(bin));
 
-    for(i = 0; i < bin_num; ++i){
+    for(i = 0; i < bin_num; i++){
         //for each bins
         bins[i].num_par = 0;
         bins[i].nei_id = (int *)malloc(9 * sizeof(int));
@@ -64,7 +64,7 @@ void init_bins(int n, bin * bins){
 
         x = i % bin_size;
         y = (i - x) / bin_size;
-        for(j = 0; j < 9; ++j){
+        for(j = 0; j < 9; j++){
             //for bins neighbor
             _x = x + x_dir[j];
             _y = y + y_dir[j];
@@ -88,17 +88,19 @@ void apply_force_bin(particle_t * p, bin * bins, int i, double *dmin, double *da
     int num_neigh = cur_bin->num_nei;
 
     //for every paticle in this bin
-    for(int i = 0; i < num_par; ++i){
+    for(int i = 0; i < num_par; i++){
         //check the neighbor for this particle
-        for(int j = 0; j < num_neigh; ++j){
+        for(int j = 0; j < num_neigh; j++){
             bin * bin_nei = bins + cur_bin->nei_id[j];
-            for(int k = 0; k < bin_nei->num_par; ++k){
+            for(int k = 0; k < bin_nei->num_par; k++){
                 int par_idx = cur_bin->par_id[i]; //the center bin
                 int par_nei_idx = bin_nei->par_id[k];
                 apply_force(p[par_idx], p[par_nei_idx], dmin, davg, navg);
             }
         }
     }
+
+    return;
 }
 
 
@@ -142,7 +144,8 @@ int main( int argc, char **argv )
 
     printf("finish bin initialization\n");
 
-    for(int i = 0; i < n; ++i){
+    for(int i = 0; i < n; i++){
+        move(particles[i]);
         particles[i].ax = 0;
         particles[i].ay = 0;
         //assign the particle to the bin
@@ -173,18 +176,18 @@ int main( int argc, char **argv )
 				//         apply_force( particles[i], particles[j],&dmin,&davg,&navg);
         // }
 
-        for(int i = 0; i < n; ++i){
+        for(int i = 0; i < n; i++){
             particles[i].ax = particles[i].ay = 0;
         }
 
-        for(int i = 0; i < bin_num; ++i){
+        for(int i = 0; i < bin_num; i++){
             apply_force_bin(particles, bins, i, &dmin, &davg, &navg);
         }
 
         //
         //  move particles
         //
-        for(int i = 0; i < n; ++i){
+        for(int i = 0; i < n; i++){
             move(particles[i]);
             particles[i].ax = 0;
             particles[i].ay = 0;
