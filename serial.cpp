@@ -91,7 +91,7 @@ void apply_force_bin(particle_t * p, bin * bins, int i, double *dmin, double *da
     for(int i = 0; i < num_par; ++i){
         //check the neighbor for this particle
         for(int j = 0; j < num_neigh; ++j){
-            bin * bin_nei = bins + bins->nei_id[j];
+            bin * bin_nei = bins + cur_bin->nei_id[j];
             for(int k = 0; k < bin_nei->num_par; ++k){
                 int par_idx = cur_bin->par_id[i]; //the center bin
                 int par_nei_idx = bin_nei->par_id[k];
