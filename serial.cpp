@@ -27,7 +27,7 @@ typedef struct{
 
 //map bins back to particles after each move
 void set_bin(int n, bin * bins){
-  
+
     int i = 0;
     //clear all bins
     for(i = 0; i < n; ++i){
@@ -69,7 +69,7 @@ void init_bins(int n, bin * bins){
             _x = x + x_dir[j];
             _y = y + y_dir[j];
             if(_x >= 0 && _y >= 0 && _x < bin_size && _y < bin_size){
-                bins[i].nei_id[j] = _x + _y * bin_size
+                bins[i].nei_id[j] = _x + _y * bin_size;
                 bins[i].num_nei++;
             }
         }
