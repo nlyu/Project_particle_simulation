@@ -30,7 +30,7 @@ void set_bin(int n, bin * bins){
 
     int i = 0;
     //clear all bins
-    for(i = 0; i < n; ++i){
+    for(i = 0; i < num_bins; ++i){
         bins[i].num_par = 0;
     }
 
@@ -138,6 +138,8 @@ int main( int argc, char **argv )
     bin * bins;
     init_bins(n, bins);
     init_particles(n, particles);
+
+    printf("finish initialization\n", );
 
     for(int i = 0; i < n; ++i){
         particles[i].ax = 0;
