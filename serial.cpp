@@ -132,6 +132,7 @@ int main( int argc, char **argv )
     //
     // init
     //
+    printf("start initialization\n");
     particle_t * particles = (particle_t *) malloc( n * sizeof(particle_t) );
     set_size(n);
 
