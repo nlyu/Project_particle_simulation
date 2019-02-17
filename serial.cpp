@@ -27,6 +27,7 @@ typedef struct{
 
 //map bins back to particles after each move
 void set_bin(int n, bin * bins){
+  
     int i = 0;
     //clear all bins
     for(i = 0; i < n; ++i){
