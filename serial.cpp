@@ -88,9 +88,9 @@ void binning(bin_dict* _bins, int n) {
         _bins[i].num_particles = 0;
 
     for(i = 0; i < n; i++){
-        int id = bin_Ids[i];          // get bin location for each particle from last move
-        _bins[id].particle_ids[_bins[id].num_particles] = i;    // link particle index id to bin index id
-        _bins[id].num_particles++;      // add one particle to the specific bin id
+        int id = bin_Ids[i];
+        _bins[id].particle_ids[_bins[id].num_particles] = i;
+        _bins[id].num_particles++;
     }
 }
 
@@ -153,7 +153,12 @@ int main( int argc, char **argv )
 
     init_particles( n, particles );
     for(int i = 0; i < n; i++){
-        move_v2(particles[i], i);   // assign each particle to a bin
+        move(particles[i]);   // assign each particle to a bin
+        particles[i].ax = 0;
+        particles[i].ay = 0;
+        bin_Ids[i] = (int)(floor(particles[i].x / cutoff) * bin_size
+                             + floor(particles[i].y / cutoff));
+
     }
 
     binning(bins, n);    // calculate number of particles in each bin
@@ -184,7 +189,11 @@ int main( int argc, char **argv )
         //  move particles
         //
         for(int i = 0; i < n; i++){
-            move_v2(particles[i], i);
+            move(particles[i]);
+            particles[i].ax = 0;
+            particles[i].ay = 0;
+            bin_Ids[i] = (int)(floor(particles[i].x / cutoff) * bin_size
+                                 + floor(particles[i].y / cutoff));
         }
 
         binning(bins, n);            // reset number of particles in each bin and calculate again
