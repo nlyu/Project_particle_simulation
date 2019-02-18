@@ -21,16 +21,16 @@ typedef struct{
     int num_nei;
     int * nei_id;
     int * par_id;
-} bin_dict;
+};
 
-void init_bins( bin_dict* bins ) {
+void init_bins( bin_dict * bins ) {
     int dx[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
-    int dy[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};  // x and y coordinates of possible neighbors
+    int dy[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};
     for(int i = 0; i < num_bins; i++){
         bins[i].num_nei = 0;
         bins[i].nei_id = (int*) malloc(9 * sizeof(int));
-        int x = i % bin_size;        // x value for bin location (0,1,2,...,49,0,1,2,...,49...)
-        int y = (i - x) / bin_size;  // y value for bin location (0,0,0,...,0 ,1,1,1,...,0 ...)
+        int x = i % bin_size;
+        int y = (i - x) / bin_size;
         for(int k = 0; k < 9; k++){
             int new_x = x + dx[k];
             int new_y = y + dy[k];
@@ -40,29 +40,31 @@ void init_bins( bin_dict* bins ) {
                 bins[i].num_nei++;
             }
         }
-
     }
 }
 
-
-void binning(bin_dict* bins, int n) {
-    int i;
-    for(i = 0; i < num_bins; i++)                  // delete particles in each bin
+void binning(bin_dict * bins, int n) {
+    int i, id, idx;
+    for(i = 0; i < num_bins; i++){
         bins[i].num_par = 0;
+    }
 
     for(i = 0; i < n; i++){
-        int id = bin_Ids[i];
-        bins[id].par_id[bins[id].num_par] = i;
+        id = bin_Ids[i];
+        idx = bins[id].num_par;
+        bins[id].par_id[idx] = i;
         bins[id].num_par++;
     }
+
+    return;
 }
 
-void apply_force_bin(particle_t* _particles, bin_dict* bins, int _binId, double *dmin, double *davg, int *navg) {
-    bin_dict* bin = bins + _binId;         // make program work on specific bin with ID _binID
+void apply_force_bin(particle_t * _particles, bin_dict * bins, int _binId, double * dmin, double * davg, int * navg) {
+    bin_dict * bin = bins + _binId;         // make program work on specific bin with ID _binID
 
     for(int i = 0; i < bin->num_par; i++){
         for(int k = 0; k < bin->num_nei; k++){
-            bin_dict* new_bin = bins + bin->nei_id[k];
+            bin_dict * new_bin = bins + bin->nei_id[k];
             for(int j = 0; j < new_bin->num_par; j++){
                 apply_force(_particles[bin->par_id[i]], _particles[new_bin->par_id[j]], dmin, davg, navg);
             }
@@ -103,7 +105,7 @@ int main( int argc, char **argv )
     num_bins = bin_size * bin_size;           // total number of bins in domain
     bin_Ids =  (int *) malloc(n * sizeof(int));
 
-    bin_dict* bins = (bin_dict*) malloc(num_bins * sizeof(bin_dict));
+    bin_dict * bins = (bin_dict *) malloc(num_bins * sizeof(bin_dict));
 
     for(int i = 0; i < num_bins; i++){
         bins[i].par_id = (int*) malloc(n*sizeof(int));
@@ -137,8 +139,7 @@ int main( int argc, char **argv )
         //  compute forces
         //
         for(int i = 0; i < n; i++){
-            particles[i].ax = 0;    // initialize acceleration after each step
-            particles[i].ay = 0;    // initialize acceleration after each step
+            particles[i].ax = particles[i].ay = 0;    // initialize acceleration after each step
         }
 
         for(int i = 0; i < num_bins; i++){
@@ -150,8 +151,7 @@ int main( int argc, char **argv )
         //
         for(int i = 0; i < n; i++){
             move(particles[i]);
-            particles[i].ax = 0;
-            particles[i].ay = 0;
+            particles[i].ax = particles[i].ay = 0;
             bin_Ids[i] = (int)(floor(particles[i].x / cutoff) * bin_size
                                  + floor(particles[i].y / cutoff));
         }
