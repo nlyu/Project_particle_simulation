@@ -190,7 +190,7 @@ int main( int argc, char **argv )
     }
     simulation_time = read_timer( ) - simulation_time;
 
-    printf( "n = %d, simulation time = %g seconds", n, simulation_time);
+    printf( "n = %d, simulation time = %g seconds", particle_num, simulation_time);
 
     if( find_option( argc, argv, "-no" ) == -1 )
     {
@@ -212,7 +212,7 @@ int main( int argc, char **argv )
     // Printing summary data
     //
     if( fsum)
-        fprintf(fsum,"%d %g\n",n,simulation_time);
+        fprintf(fsum,"%d %g\n", particle_num, simulation_time);
 
     //
     // Clearing space
