@@ -6,6 +6,8 @@
 
 #define density 0.0005
 #define cutoff  0.01
+#define PARICLE_BIN(p) (int)(floor(p.x / cutoff) * bin_size
+                             + floor(p.y / cutoff));
 
 double size2;
 int bin_size;
@@ -120,9 +122,7 @@ int main( int argc, char **argv )
     for(int i = 0; i < n; i++){
         move(particles[i]);
         particles[i].ax = particles[i].ay = 0;
-        bin_Ids[i] = (int)(floor(particles[i].x / cutoff) * bin_size
-                             + floor(particles[i].y / cutoff));
-
+        bin_Ids[i] = PARICLE_BIN(particles[i]);
     }
 
     binning(bins, n);
@@ -154,8 +154,7 @@ int main( int argc, char **argv )
         for(int i = 0; i < n; i++){
             move(particles[i]);
             particles[i].ax = particles[i].ay = 0;
-            bin_Ids[i] = (int)(floor(particles[i].x / cutoff) * bin_size
-                                 + floor(particles[i].y / cutoff));
+            bin_Ids[i] = PARICLE_BIN(particles[i]);
         }
 
         binning(bins, n);            // reset number of particles in each bin and calculate again
