@@ -22,7 +22,7 @@ public:
 /*
     initialize the bins
 */
-void init_bins(bin * bins){
+void init_bins(bin * bins, int n){
     int x, y, i, k, next_x, next_y, new_id;
     int dx[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
     int dy[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};
@@ -129,7 +129,7 @@ int main( int argc, char **argv )
     bin * bins = (bin *) malloc(num_bins * sizeof(bin));
 
     //initialize
-    init_bins(bins);
+    init_bins(bins, n);
     init_particles(n, particles);
 
     //allocate the position of particle to bins
