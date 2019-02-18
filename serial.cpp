@@ -6,8 +6,7 @@
 
 #define density 0.0005
 #define cutoff  0.01
-#define PARICLE_BIN(p) (int)(floor(p.x / cutoff) * bin_size
-                             + floor(p.y / cutoff))
+#define PARICLE_BIN(p) (int)(floor(p.x / cutoff) * bin_size + floor(p.y / cutoff))
 
 double size2;
 int bin_size;
