@@ -12,12 +12,12 @@ int bin_size;
 int num_bins;
 int * bin_Ids;
 
-typedef struct{
-    int num_par;
-    int num_nei;
+class bin{
+public:
+    int num_par, num_nei;
     int * nei_id;
     int * par_id;
-} bin;
+};
 
 void init_bins( bin * bins ) {
     int x, y, i, k, next_x, next_y, new_id;
