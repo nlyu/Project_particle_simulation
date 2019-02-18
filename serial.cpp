@@ -24,12 +24,12 @@ void init_bins( bin * bins ) {
     int dx[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
     int dy[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};
     int x, y, i, k, next_x, next_y, new_id;
-    for(i = 0; i < num_bins; i++){
+    for(i = 0; i < num_bins; ++i){
         bins[i].num_nei = 0;
         bins[i].nei_id = (int *) malloc(9 * sizeof(int));
         x = i % bin_size;
         y = (i - x) / bin_size;
-        for(k = 0; k < 9; k++){
+        for(k = 0; k < 9; ++k){
             next_x = x + dx[k];
             next_y = y + dy[k];
             if (next_x >= 0 && next_y >= 0 && next_x < bin_size && next_y < bin_size) {
@@ -45,11 +45,11 @@ void init_bins( bin * bins ) {
 
 void binning(bin * bins, int n) {
     int i, id, idx;
-    for(i = 0; i < num_bins; i++){
+    for(i = 0; i < num_bins; ++i){
         bins[i].num_par = 0;
     }
 
-    for(i = 0; i < n; i++){
+    for(i = 0; i < n; ++i){
         id = bin_Ids[i];
         idx = bins[id].num_par;
         bins[id].par_id[idx] = i;
@@ -63,10 +63,10 @@ void apply_force_bin(particle_t * _particles, bin * bins, int _binId, double * d
     bin * cur_bin = bins + _binId;
     bin * new_bin;
     int i, k, j, par_cur, par_nei;
-    for(i = 0; i < cur_bin->num_par; i++){
-        for(k = 0; k < cur_bin->num_nei; k++){
+    for(i = 0; i < cur_bin->num_par; ++i){
+        for(k = 0; k < cur_bin->num_nei; ++k){
             new_bin = bins + cur_bin->nei_id[k];
-            for(j = 0; j < new_bin->num_par; j++){
+            for(j = 0; j < new_bin->num_par; ++j){
                 par_cur = cur_bin->par_id[i];
                 par_nei = new_bin->par_id[j];
                 apply_force(_particles[par_cur], _particles[par_nei], dmin, davg, navg);
@@ -111,14 +111,14 @@ int main( int argc, char **argv )
     bin_Ids =  (int *) malloc(n * sizeof(int));
     bin * bins = (bin *) malloc(num_bins * sizeof(bin));
 
-    for(int i = 0; i < num_bins; i++){
+    for(int i = 0; i < num_bins; ++i){
         bins[i].par_id = (int *) malloc(n * sizeof(int));
     }
 
     init_bins(bins);
     init_particles(n, particles);
 
-    for(int i = 0; i < n; i++){
+    for(int i = 0; i < n; ++i){
         move(particles[i]);
         particles[i].ax = particles[i].ay = 0;
         bin_Ids[i] = PARICLE_BIN(particles[i]);
@@ -139,18 +139,18 @@ int main( int argc, char **argv )
         //
         //  compute forces
         //
-        for(int i = 0; i < n; i++){
+        for(int i = 0; i < n; ++i){
             particles[i].ax = particles[i].ay = 0;
         }
 
-        for(int i = 0; i < num_bins; i++){
+        for(int i = 0; i < num_bins; ++i){
             apply_force_bin(particles, bins, i, &dmin, &davg, &navg);
         }
 
         //
         //  move particles
         //
-        for(int i = 0; i < n; i++){
+        for(int i = 0; i < n; ++i){
             move(particles[i]);
             particles[i].ax = particles[i].ay = 0;
             bin_Ids[i] = PARICLE_BIN(particles[i]);
