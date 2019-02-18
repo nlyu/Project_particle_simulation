@@ -63,7 +63,7 @@ void move_v2( particle_t &p, int _id)
 void init_bins( bin_dict* _bins ) {
     int dx[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
     int dy[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};  // x and y coordinates of possible neighbors
-    for(int i = 0; i < num_bins; i++)
+    for(int i = 0; i < num_bins; i++){
         _bins[i].num_neigh = 0;
         _bins[i].neighbors_ids = (int*) malloc(9 * sizeof(int));
         int x = i % bin_size;        // x value for bin location (0,1,2,...,49,0,1,2,...,49...)
@@ -102,6 +102,7 @@ void apply_force_bin(particle_t* _particles, bin_dict* _bins, int _binId, double
             bin_dict* new_bin = _bins + bin->neighbors_ids[k];
             for(int j = 0; j < new_bin->num_particles; j++){
                 apply_force(_particles[bin->particle_ids[i]], _particles[new_bin->particle_ids[j]], dmin, davg, navg);
+            }
         }
     }
 }
@@ -146,12 +147,14 @@ int main( int argc, char **argv )
     bin_dict* bins = (bin_dict*) malloc(num_bins * sizeof(bin_dict));
     for(int i = 0; i < num_bins; i++){
         bins[i].particle_ids = (int*) malloc(n*sizeof(int));
+    }
     init_bins(bins);
 
 
     init_particles( n, particles );
     for(int i = 0; i < n; i++){
         move_v2(particles[i], i);   // assign each particle to a bin
+    }
 
     binning(bins, n);    // calculate number of particles in each bin
 
@@ -181,11 +184,12 @@ int main( int argc, char **argv )
         //  move particles
         //
         for(int i = 0; i < n; i++){
-            move_v2( particles[i], i );
+            move_v2(particles[i], i);
+        }
 
-        binning( bins, n);            // reset number of particles in each bin and calculate again
+        binning(bins, n);            // reset number of particles in each bin and calculate again
 
-        if( find_option( argc, argv, "-no" ) == -1 )
+        if(find_option( argc, argv, "-no" ) == -1)
         {
           //
           // Computing statistical data
