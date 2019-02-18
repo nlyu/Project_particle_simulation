@@ -3,19 +3,20 @@
 #include <assert.h>
 #include <math.h>
 #include "common.h"
+
 #define density 0.0005
 #define mass    0.01
 #define cutoff  0.01
+
 #define cutoff2 (cutoff * cutoff)
 #define min_r   (cutoff/100)
 #define dt      0.0005
 #define FOR(i,n) for( int i=0; i<n; i++ )
 
 double size2;
-int bin_size;           // number of bins in one direction
-int num_bins;           // total number of bins in the domain
-int shift[9];
-int* bin_Ids;           // bin Ids
+int bin_size;
+int num_bins;
+int* bin_Ids;
 
 typedef struct{
     int num_particles;
@@ -59,33 +60,6 @@ void move_v2( particle_t &p, int _id)
                          + floor(p.y / cutoff));          // save bin location for each particle
 }
 
-
-void apply_force_v2( particle_t &particle, particle_t &neighbor, double *dmin, double *davg, int *navg)
-{
-
-    double dx = neighbor.x - particle.x;
-    double dy = neighbor.y - particle.y;
-    double r2 = dx * dx + dy * dy;
-    if( r2 > cutoff*cutoff )
-        return;
-	if (r2 != 0)
-        {
-	   if (r2/(cutoff*cutoff) < *dmin * (*dmin))
-	      *dmin = sqrt(r2)/cutoff;
-           (*davg) += sqrt(r2)/cutoff;
-           (*navg) ++;
-        }
-
-    r2 = fmax( r2, min_r*min_r );
-    double r = sqrt( r2 );
-
-    //
-    //  very simple short-range repulsive force
-    //
-    double coef = ( 1 - cutoff / r ) / r2 / mass;
-    particle.ax += coef * dx;
-    particle.ay += coef * dy;
-}
 
 void init_bins( bin_dict* _bins ) {
     int dx[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
@@ -142,7 +116,7 @@ void set_size2( int n )
 }
 
 int main( int argc, char **argv )
-{    
+{
     int navg,nabsavg=0;
     double davg,dmin, absmin=1.0, absavg=0.0;
 
@@ -161,7 +135,7 @@ int main( int argc, char **argv )
 
     char *savename = read_string( argc, argv, "-o", NULL );
     char *sumname = read_string( argc, argv, "-s", NULL );
-    
+
     FILE *fsave = savename ? fopen( savename, "w" ) : NULL;
     FILE *fsum = sumname ? fopen ( sumname, "a" ) : NULL;
 
@@ -185,7 +159,7 @@ int main( int argc, char **argv )
     //  simulate a number of time steps
     //
     double simulation_time = read_timer( ); // reads time using function in commons.cpp
-	
+
     FOR(step, NSTEPS)
     {
 
@@ -195,7 +169,7 @@ int main( int argc, char **argv )
         //
         //  compute forces
         //
-	FOR(i, n){
+	      FOR(i, n){
             particles[i].ax = 0;    // initialize acceleration after each step
             particles[i].ay = 0;    // initialize acceleration after each step
         }
@@ -203,11 +177,11 @@ int main( int argc, char **argv )
         FOR(i, num_bins){
             apply_force_bin(particles, bins, i, &dmin, &davg, &navg);    // apply forces in particles for bin by bin with only neighboring bins
         }
- 
+
         //
         //  move particles
         //
-        for( int i = 0; i < n; i++ ) 
+        for( int i = 0; i < n; i++ )
             move_v2( particles[i], i );
 
         binning( bins, n);            // reset number of particles in each bin and calculate again
@@ -222,17 +196,17 @@ int main( int argc, char **argv )
             nabsavg++;
           }
           if (dmin < absmin) absmin = dmin;
-		
+
         }
     }
     simulation_time = read_timer( ) - simulation_time;
-    
+
     printf( "n = %d, simulation time = %g seconds", n, simulation_time);
 
     if( find_option( argc, argv, "-no" ) == -1 )
     {
       if (nabsavg) absavg /= nabsavg;
-    // 
+    //
     //  -The minimum distance absmin between 2 particles during the run of the simulation
     //  -A Correct simulation will have particles stay at greater than 0.4 (of cutoff) with typical values between .7-.8
     //  -A simulation where particles don't interact correctly will be less than 0.4 (of cutoff) with typical values between .01-.05
@@ -243,23 +217,22 @@ int main( int argc, char **argv )
     if (absmin < 0.4) printf ("\nThe minimum distance is below 0.4 meaning that some particle is not interacting");
     if (absavg < 0.8) printf ("\nThe average distance is below 0.8 meaning that most particles are not interacting");
     }
-    printf("\n");     
+    printf("\n");
 
     //
     // Printing summary data
     //
-    if( fsum) 
+    if( fsum)
         fprintf(fsum,"%d %g\n",n,simulation_time);
- 
+
     //
     // Clearing space
     //
     if( fsum )
-        fclose( fsum );    
+        fclose( fsum );
     free( particles );
     if( fsave )
         fclose( fsave );
-    
+
     return 0;
 }
-
