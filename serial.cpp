@@ -14,20 +14,27 @@ int * bin_Ids;
 
 class bin{
 public:
-    int num_par, num_nei;
-    int * nei_id;
-    int * par_id;
-};
+    int num_par, num_nei;   //counter
+    int * nei_id;           //neighboring bins
+    int * par_id;           //paricles in the bins
+};                          //the bin that separate the zone
 
+/*
+    initialize the bins
+*/
 void init_bins(bin * bins){
     int x, y, i, k, next_x, next_y, new_id;
     int dx[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
     int dy[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};
+
+    //for each bins
     for(i = 0; i < num_bins; ++i){
         bins[i].num_nei = 0;
         bins[i].nei_id = (int *) malloc(9 * sizeof(int));
+        bins[i].par_id = (int *) malloc(n * sizeof(int));
         x = i % bin_size;
         y = (i - x) / bin_size;
+        //for bin's neighbor
         for(k = 0; k < 9; ++k){
             next_x = x + dx[k];
             next_y = y + dy[k];
@@ -41,12 +48,17 @@ void init_bins(bin * bins){
     return;
 }
 
+/*
+   update the particles in bins
+*/
 void binning(bin * bins, int n){
     int i, id, idx;
+    //clear particle counter
     for(i = 0; i < num_bins; ++i){
         bins[i].num_par = 0;
     }
 
+    //set particles into bin
     for(i = 0; i < n; ++i){
         id = bin_Ids[i];
         idx = bins[id].num_par;
@@ -56,17 +68,26 @@ void binning(bin * bins, int n){
     return;
 }
 
+/*
+  apply particle force in each bin
+*/
 void apply_force_bin(particle_t * _particles, bin * bins, int i, double * dmin, double * davg, int * navg){
     bin * cur_bin = bins + i;
     bin * new_bin;
     int k, j, par_cur, par_nei;
+
+    //for all particles in this bin
     for(i = 0; i < cur_bin->num_par; ++i){
+        //look the neighbor around including itself
         for(k = 0; k < cur_bin->num_nei; ++k){
             new_bin = bins + cur_bin->nei_id[k];
+            //for all particle in the neighbor bin
             for(j = 0; j < new_bin->num_par; ++j){
                 par_cur = cur_bin->par_id[i];
                 par_nei = new_bin->par_id[j];
-                apply_force(_particles[par_cur], _particles[par_nei], dmin, davg, navg);
+                apply_force(_particles[par_cur],
+                            _particles[par_nei],
+                            dmin, davg, navg);
             }
         }
     }
@@ -101,24 +122,24 @@ int main( int argc, char **argv )
 
     set_size(n);
 
+    //initialize of global var and bin
     bin_size = (int) ceil(sqrt(density * n) / cutoff);
     num_bins = bin_size * bin_size;
     bin_Ids =  (int *) malloc(n * sizeof(int));
     bin * bins = (bin *) malloc(num_bins * sizeof(bin));
 
-    for(int i = 0; i < num_bins; ++i){
-        bins[i].par_id = (int *) malloc(n * sizeof(int));
-    }
-
+    //initialize
     init_bins(bins);
     init_particles(n, particles);
 
+    //allocate the position of particle to bins
     for(int i = 0; i < n; ++i){
         move(particles[i]);
         particles[i].ax = particles[i].ay = 0;
         bin_Ids[i] = PARICLE_BIN(particles[i]);
     }
 
+    //map the bins mack to particle
     binning(bins, n);
 
     //
@@ -164,7 +185,6 @@ int main( int argc, char **argv )
           }
 
           if(dmin < absmin) absmin = dmin;
-
         }
     }
     simulation_time = read_timer( ) - simulation_time;
