@@ -3,112 +3,146 @@
 #include <assert.h>
 #include <math.h>
 #include "common.h"
-
-//definition from commons
 #define density 0.0005
 #define mass    0.01
 #define cutoff  0.01
+#define cutoff2 (cutoff * cutoff)
 #define min_r   (cutoff/100)
 #define dt      0.0005
+#define FOR(i,n) for( int i=0; i<n; i++ )
 
-int bin_size;
-int bin_num;
-int * particle_bin; //which particle in which bin
-
-double width;
+double size2;
+int bin_size;           // number of bins in one direction
+int num_bins;           // total number of bins in the domain
+int shift[9];
+int* bin_Ids;           // bin Ids
 
 typedef struct{
-    int num_par;
-    int num_nei;
-    int * par_id;
-    int * nei_id; //neighbor bin
-} bin; //which bin has which particle
-
-
-//map bins back to particles after each move
-void set_bin(int n, bin * bins){
-
-    int i = 0;
-    //clear all bins
-    for(i = 0; i < bin_num; i++){
-        bins[i].num_par = 0;
-    }
-
-    //fill the particles in bins
-    for(i = 0; i < n; i++){
-        int par_idx = particle_bin[i]; //get particles by particle id
-        int cur_par = bins[par_idx].num_par; //get numbers of particle in bin
-        bins[par_idx].par_id[cur_par] = i;
-        bins[par_idx].num_par++;
-    }
-
-    return;
-}
-
-void init_bins(int n, bin * bins){
-    width = sqrt( density * n);
-    bin_size = (int)ceil(width / cutoff);
-    bin_num = bin_size * bin_size;
-    particle_bin = (int *) malloc(n * sizeof(int));
-
-    int x_dir[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
-    int y_dir[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};
-    int i, j, x, y, _x, _y;
-    bins = (bin *) malloc(bin_num * sizeof(bin));
-
-    for(i = 0; i < bin_num; i++){
-        //for each bins
-        bins[i].num_par = 0;
-        bins[i].nei_id = (int *)malloc(9 * sizeof(int));
-        bins[i].par_id = (int *)malloc(n * sizeof(int));
-
-        x = i % bin_size;
-        y = (i - x) / bin_size;
-        for(j = 0; j < 9; j++){
-            //for bins neighbor
-            _x = x + x_dir[j];
-            _y = y + y_dir[j];
-            if(_x >= 0 && _y >= 0 && _x < bin_size && _y < bin_size){
-                bins[i].nei_id[j] = _x + _y * bin_size;
-                bins[i].num_nei++;
-            }
-        }
-
-    }
-
-    return;
-}
-
-
-void apply_force_bin(particle_t * p, bin * bins, int i, double *dmin, double *davg, int *navg){
-
-    //for each particles in one bin
-    bin * cur_bin = bins + i;
-    int num_par = cur_bin->num_par;
-    int num_neigh = cur_bin->num_nei;
-
-    //for every paticle in this bin
-    for(int i = 0; i < num_par; i++){
-        //check the neighbor for this particle
-        for(int j = 0; j < num_neigh; j++){
-            bin * bin_nei = bins + cur_bin->nei_id[j];
-            for(int k = 0; k < bin_nei->num_par; k++){
-                int par_idx = cur_bin->par_id[i]; //the center bin
-                int par_nei_idx = bin_nei->par_id[k];
-                apply_force(p[par_idx], p[par_nei_idx], dmin, davg, navg);
-            }
-        }
-    }
-
-    return;
-}
-
+    int num_particles;
+    int num_neigh;
+    int* neighbors_ids;
+    int* particle_ids;
+} bin_dict;
 
 //
 //  benchmarking program
 //
-int main( int argc, char **argv )
+void move_v2( particle_t &p, int _id)
 {
+    //
+    //  slightly simplified Velocity Verlet integration
+    //  conserves energy better than explicit Euler method
+    //
+    p.vx += p.ax * dt;
+    p.vy += p.ay * dt;
+    p.x  += p.vx * dt;
+    p.y  += p.vy * dt;
+
+    //
+    //  bounce from walls
+    //
+    while( p.x < 0 || p.x > size2 )
+    {
+        p.x  = p.x < 0 ? -p.x : 2*size2-p.x;
+        p.vx = -p.vx;
+    }
+    while( p.y < 0 || p.y > size2 )
+    {
+        p.y  = p.y < 0 ? -p.y : 2*size2-p.y;
+        p.vy = -p.vy;
+    }
+
+    p.ax = 0;
+    p.ay = 0;
+    //int id = ;
+    bin_Ids[_id] = (int)(floor(p.x / cutoff) * bin_size
+                         + floor(p.y / cutoff));          // save bin location for each particle
+}
+
+
+void apply_force_v2( particle_t &particle, particle_t &neighbor, double *dmin, double *davg, int *navg)
+{
+
+    double dx = neighbor.x - particle.x;
+    double dy = neighbor.y - particle.y;
+    double r2 = dx * dx + dy * dy;
+    if( r2 > cutoff*cutoff )
+        return;
+	if (r2 != 0)
+        {
+	   if (r2/(cutoff*cutoff) < *dmin * (*dmin))
+	      *dmin = sqrt(r2)/cutoff;
+           (*davg) += sqrt(r2)/cutoff;
+           (*navg) ++;
+        }
+
+    r2 = fmax( r2, min_r*min_r );
+    double r = sqrt( r2 );
+
+    //
+    //  very simple short-range repulsive force
+    //
+    double coef = ( 1 - cutoff / r ) / r2 / mass;
+    particle.ax += coef * dx;
+    particle.ay += coef * dy;
+}
+
+void init_bins( bin_dict* _bins ) {
+    int dx[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
+    int dy[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};  // x and y coordinates of possible neighbors
+    FOR (i, num_bins) {          // for loop to count number of bin neighbors
+        _bins[i].num_neigh = 0;
+        _bins[i].neighbors_ids = (int*) malloc(9 * sizeof(int));
+        int x = i % bin_size;        // x value for bin location (0,1,2,...,49,0,1,2,...,49...)
+        int y = (i - x) / bin_size;  // y value for bin location (0,0,0,...,0 ,1,1,1,...,0 ...)
+        FOR (k, 9) {                // for loop to place neighbor and check neighbor is inbound
+            int new_x = x + dx[k];
+            int new_y = y + dy[k];
+            if (new_x >= 0 && new_y >= 0 && new_x < bin_size && new_y < bin_size) {
+                int new_id = new_x + new_y * bin_size;
+                _bins[i].neighbors_ids[_bins[i].num_neigh] = new_id;
+                _bins[i].num_neigh++;
+            }
+        }
+
+    }
+}
+
+
+void binning(bin_dict* _bins, int _num) {
+    FOR (i, num_bins)                   // delete particles in each bin
+        _bins[i].num_particles = 0;
+
+    FOR (i, _num) {
+        int id = bin_Ids[i];          // get bin location for each particle from last move
+        _bins[id].particle_ids[_bins[id].num_particles] = i;    // link particle index id to bin index id
+        _bins[id].num_particles++;      // add one particle to the specific bin id
+    }
+}
+
+void apply_force_bin(particle_t* _particles, bin_dict* _bins, int _binId, double *dmin, double *davg, int *navg) {
+    bin_dict* bin = _bins + _binId;         // make program work on specific bin with ID _binID
+
+    FOR (i, bin->num_particles) {           // for loop that goes through all particles in specific bin
+        FOR (k, bin->num_neigh) {           // for loop to apply force on the surrounding bins
+            bin_dict* new_bin = _bins + bin->neighbors_ids[k];
+            for(int j = 0; j < new_bin->num_particles; j++)
+                apply_force(_particles[bin->particle_ids[i]], _particles[new_bin->particle_ids[j]], dmin, davg, navg);
+        }
+    }
+}
+
+void set_size2( int n )
+{
+    size2 = sqrt( density * n );
+    bin_size = (int)ceil(size2 / cutoff);      // use cutoff to divide bins each with size cutoff
+    num_bins = bin_size * bin_size;           // total number of bins in domain
+    bin_Ids =  (int*) malloc(n * sizeof(int));
+
+}
+
+int main( int argc, char **argv )
+{    
     int navg,nabsavg=0;
     double davg,dmin, absmin=1.0, absavg=0.0;
 
@@ -127,105 +161,78 @@ int main( int argc, char **argv )
 
     char *savename = read_string( argc, argv, "-o", NULL );
     char *sumname = read_string( argc, argv, "-s", NULL );
-
+    
     FILE *fsave = savename ? fopen( savename, "w" ) : NULL;
     FILE *fsum = sumname ? fopen ( sumname, "a" ) : NULL;
 
-    //
-    // init
-    //
-    printf("start initialization\n");
-    particle_t * particles = (particle_t *) malloc( n * sizeof(particle_t) );
-    set_size(n);
+    particle_t *particles = (particle_t*) malloc( n * sizeof(particle_t) );
 
-    bin * bins;
-    init_bins(n, bins);
-    init_particles(n, particles);
+    set_size( n );
+    set_size2( n );                          // set size to sqrt(density==0.0005*n==500) used to initialize position of the particles in next step
+    bin_dict* bins = (bin_dict*) malloc(num_bins * sizeof(bin_dict));
+    FOR (i, num_bins)
+        bins[i].particle_ids = (int*) malloc(n*sizeof(int));
+    init_bins(bins);
 
-    printf("finish bin initialization\n");
 
-    for(int i = 0; i < n; i++){
-        move(particles[i]);
-        particles[i].ax = 0;
-        particles[i].ay = 0;
-        //assign the particle to the bin
-        particle_bin[i] = (int) (floor(particles[i].x / cutoff) * bin_size +
-                                 floor(particles[i].y / cutoff));
-    }
+    init_particles( n, particles );
+    FOR (i, n)
+        move_v2(particles[i], i);   // assign each particle to a bin
 
-    set_bin(n, bins);
+    binning(bins, n);    // calculate number of particles in each bin
 
-    printf("finish particle initialization\n");
     //
     //  simulate a number of time steps
     //
-    double simulation_time = read_timer( );
-
-    for( int step = 0; step < NSTEPS; step++ )
+    double simulation_time = read_timer( ); // reads time using function in commons.cpp
+	
+    FOR(step, NSTEPS)
     {
-	      navg = 0;
+
+        navg = 0;
         davg = 0.0;
-	      dmin = 1.0;
+        dmin = 1.0;
         //
         //  compute forces
         //
-        // for( int i = 0; i < n; i++ )
-        // {
-        //     particles[i].ax = particles[i].ay = 0;
-        //     for (int j = 0; j < n; j++ )
-				//         apply_force( particles[i], particles[j],&dmin,&davg,&navg);
-        // }
-
-        for(int i = 0; i < n; i++){
-            particles[i].ax = particles[i].ay = 0;
+	FOR(i, n){
+            particles[i].ax = 0;    // initialize acceleration after each step
+            particles[i].ay = 0;    // initialize acceleration after each step
         }
 
-        for(int i = 0; i < bin_num; i++){
-            apply_force_bin(particles, bins, i, &dmin, &davg, &navg);
+        FOR(i, num_bins){
+            apply_force_bin(particles, bins, i, &dmin, &davg, &navg);    // apply forces in particles for bin by bin with only neighboring bins
         }
-
+ 
         //
         //  move particles
         //
-        for(int i = 0; i < n; i++){
-            move(particles[i]);
-            particles[i].ax = 0;
-            particles[i].ay = 0;
-            //get there new position
-            particle_bin[i] = (int)(floor(particles[i].x / cutoff) * bin_size
-                               + floor(particles[i].y / cutoff));
-        }
+        for( int i = 0; i < n; i++ ) 
+            move_v2( particles[i], i );
 
-        //let bin get the new particle
-        set_bin(n, bins);
+        binning( bins, n);            // reset number of particles in each bin and calculate again
 
         if( find_option( argc, argv, "-no" ) == -1 )
         {
-            //
-            // Computing statistical data
-            //
-            if (navg) {
-              absavg +=  davg/navg;
-              nabsavg++;
-            }
-            if (dmin < absmin) absmin = dmin;
-
-            //
-            //  save if necessary
-            //
-            if( fsave && (step%SAVEFREQ) == 0 )
-                save( fsave, n, particles );
+          //
+          // Computing statistical data
+          //
+          if (navg) {
+            absavg +=  davg/navg;
+            nabsavg++;
+          }
+          if (dmin < absmin) absmin = dmin;
+		
         }
     }
-
     simulation_time = read_timer( ) - simulation_time;
-
+    
     printf( "n = %d, simulation time = %g seconds", n, simulation_time);
 
     if( find_option( argc, argv, "-no" ) == -1 )
     {
       if (nabsavg) absavg /= nabsavg;
-    //
+    // 
     //  -The minimum distance absmin between 2 particles during the run of the simulation
     //  -A Correct simulation will have particles stay at greater than 0.4 (of cutoff) with typical values between .7-.8
     //  -A simulation where particles don't interact correctly will be less than 0.4 (of cutoff) with typical values between .01-.05
@@ -236,22 +243,23 @@ int main( int argc, char **argv )
     if (absmin < 0.4) printf ("\nThe minimum distance is below 0.4 meaning that some particle is not interacting");
     if (absavg < 0.8) printf ("\nThe average distance is below 0.8 meaning that most particles are not interacting");
     }
-    printf("\n");
+    printf("\n");     
 
     //
     // Printing summary data
     //
-    if( fsum)
+    if( fsum) 
         fprintf(fsum,"%d %g\n",n,simulation_time);
-
+ 
     //
     // Clearing space
     //
     if( fsum )
-        fclose( fsum );
+        fclose( fsum );    
     free( particles );
     if( fsave )
         fclose( fsave );
-
+    
     return 0;
 }
+
