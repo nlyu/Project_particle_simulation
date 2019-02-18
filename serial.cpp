@@ -24,41 +24,6 @@ typedef struct{
     int* particle_ids;
 } bin_dict;
 
-//
-//  benchmarking program
-//
-void move_v2( particle_t &p, int _id)
-{
-    //
-    //  slightly simplified Velocity Verlet integration
-    //  conserves energy better than explicit Euler method
-    //
-    p.vx += p.ax * dt;
-    p.vy += p.ay * dt;
-    p.x  += p.vx * dt;
-    p.y  += p.vy * dt;
-
-    //
-    //  bounce from walls
-    //
-    while( p.x < 0 || p.x > size2 )
-    {
-        p.x  = p.x < 0 ? -p.x : 2*size2-p.x;
-        p.vx = -p.vx;
-    }
-    while( p.y < 0 || p.y > size2 )
-    {
-        p.y  = p.y < 0 ? -p.y : 2*size2-p.y;
-        p.vy = -p.vy;
-    }
-
-    p.ax = 0;
-    p.ay = 0;
-    //int id = ;
-    bin_Ids[_id] = (int)(floor(p.x / cutoff) * bin_size
-                         + floor(p.y / cutoff));          // save bin location for each particle
-}
-
 
 void init_bins( bin_dict* _bins ) {
     int dx[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
@@ -107,15 +72,6 @@ void apply_force_bin(particle_t* _particles, bin_dict* _bins, int _binId, double
     }
 }
 
-void set_size2( int n )
-{
-    size2 = sqrt( density * n );
-    bin_size = (int)ceil(size2 / cutoff);      // use cutoff to divide bins each with size cutoff
-    num_bins = bin_size * bin_size;           // total number of bins in domain
-    bin_Ids =  (int*) malloc(n * sizeof(int));
-
-}
-
 int main( int argc, char **argv )
 {
     int navg,nabsavg=0;
@@ -142,14 +98,18 @@ int main( int argc, char **argv )
 
     particle_t *particles = (particle_t*) malloc( n * sizeof(particle_t) );
 
-    set_size( n );
-    set_size2( n );                          // set size to sqrt(density==0.0005*n==500) used to initialize position of the particles in next step
+    set_size(n);
+
+    size2 = sqrt(density * n);
+    bin_size = (int)ceil(size2 / cutoff);      // use cutoff to divide bins each with size cutoff
+    num_bins = bin_size * bin_size;           // total number of bins in domain
+    bin_Ids =  (int *) malloc(n * sizeof(int));
+
     bin_dict* bins = (bin_dict*) malloc(num_bins * sizeof(bin_dict));
     for(int i = 0; i < num_bins; i++){
         bins[i].particle_ids = (int*) malloc(n*sizeof(int));
     }
     init_bins(bins);
-
 
     init_particles( n, particles );
     for(int i = 0; i < n; i++){
