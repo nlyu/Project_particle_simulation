@@ -22,21 +22,24 @@ typedef struct{
 void init_bins( bin * bins ) {
     int dx[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
     int dy[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};
-    for(int i = 0; i < num_bins; i++){
+    int x, y, i, k, next_x, next_y, new_id;
+    for(i = 0; i < num_bins; i++){
         bins[i].num_nei = 0;
-        bins[i].nei_id = (int*) malloc(9 * sizeof(int));
-        int x = i % bin_size;
-        int y = (i - x) / bin_size;
-        for(int k = 0; k < 9; k++){
-            int new_x = x + dx[k];
-            int new_y = y + dy[k];
-            if (new_x >= 0 && new_y >= 0 && new_x < bin_size && new_y < bin_size) {
-                int new_id = new_x + new_y * bin_size;
+        bins[i].nei_id = (int *) malloc(9 * sizeof(int));
+        x = i % bin_size;
+        y = (i - x) / bin_size;
+        for(k = 0; k < 9; k++){
+            next_x = x + dx[k];
+            next_y = y + dy[k];
+            if (next_x >= 0 && next_y >= 0 && next_x < bin_size && next_y < bin_size) {
+                new_id = next_x + next_y * bin_size;
                 bins[i].nei_id[bins[i].num_nei] = new_id;
                 bins[i].num_nei++;
             }
         }
     }
+
+    return;
 }
 
 void binning(bin * bins, int n) {
@@ -58,15 +61,19 @@ void binning(bin * bins, int n) {
 void apply_force_bin(particle_t * _particles, bin * bins, int _binId, double * dmin, double * davg, int * navg) {
     bin * cur_bin = bins + _binId;
     bin * new_bin;
-    int i, k, j;
+    int i, k, j, par_cur, par_nei;
     for(i = 0; i < cur_bin->num_par; i++){
         for(k = 0; k < cur_bin->num_nei; k++){
             new_bin = bins + cur_bin->nei_id[k];
             for(j = 0; j < new_bin->num_par; j++){
-                apply_force(_particles[cur_bin->par_id[i]], _particles[new_bin->par_id[j]], dmin, davg, navg);
+                par_cur = cur_bin->par_id[i];
+                par_nei = new_bin->par_id[j];
+                apply_force(_particles[par_cur], _particles[par_nei], dmin, davg, navg);
             }
         }
     }
+
+    return;
 }
 
 int main( int argc, char **argv )
@@ -109,7 +116,7 @@ int main( int argc, char **argv )
 
     init_bins(bins);
 
-    init_particles( n, particles );
+    init_particles(n, particles);
 
     for(int i = 0; i < n; i++){
         move(particles[i]);
