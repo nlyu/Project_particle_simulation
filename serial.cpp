@@ -11,7 +11,6 @@
 #define cutoff2 (cutoff * cutoff)
 #define min_r   (cutoff/100)
 #define dt      0.0005
-#define FOR(i,n) for( int i=0; i<n; i++ )
 
 double size2;
 int bin_size;
@@ -64,12 +63,12 @@ void move_v2( particle_t &p, int _id)
 void init_bins( bin_dict* _bins ) {
     int dx[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
     int dy[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};  // x and y coordinates of possible neighbors
-    FOR (i, num_bins) {          // for loop to count number of bin neighbors
+    for(int i = 0; i < num_bins; i++)
         _bins[i].num_neigh = 0;
         _bins[i].neighbors_ids = (int*) malloc(9 * sizeof(int));
         int x = i % bin_size;        // x value for bin location (0,1,2,...,49,0,1,2,...,49...)
         int y = (i - x) / bin_size;  // y value for bin location (0,0,0,...,0 ,1,1,1,...,0 ...)
-        FOR (k, 9) {                // for loop to place neighbor and check neighbor is inbound
+        for(int k = 0; k < 9; k++){
             int new_x = x + dx[k];
             int new_y = y + dy[k];
             if (new_x >= 0 && new_y >= 0 && new_x < bin_size && new_y < bin_size) {
@@ -83,11 +82,12 @@ void init_bins( bin_dict* _bins ) {
 }
 
 
-void binning(bin_dict* _bins, int _num) {
-    FOR (i, num_bins)                   // delete particles in each bin
+void binning(bin_dict* _bins, int n) {
+    int i;
+    for(i = 0; i < num_bins; i++)                  // delete particles in each bin
         _bins[i].num_particles = 0;
 
-    FOR (i, _num) {
+    for(i = 0; i < n; i++){
         int id = bin_Ids[i];          // get bin location for each particle from last move
         _bins[id].particle_ids[_bins[id].num_particles] = i;    // link particle index id to bin index id
         _bins[id].num_particles++;      // add one particle to the specific bin id
@@ -97,10 +97,10 @@ void binning(bin_dict* _bins, int _num) {
 void apply_force_bin(particle_t* _particles, bin_dict* _bins, int _binId, double *dmin, double *davg, int *navg) {
     bin_dict* bin = _bins + _binId;         // make program work on specific bin with ID _binID
 
-    FOR (i, bin->num_particles) {           // for loop that goes through all particles in specific bin
-        FOR (k, bin->num_neigh) {           // for loop to apply force on the surrounding bins
+    for(int i = 0; i < bin->num_particles; i++){
+        for(int k = 0; k < bin->num_neigh; k++){
             bin_dict* new_bin = _bins + bin->neighbors_ids[k];
-            for(int j = 0; j < new_bin->num_particles; j++)
+            for(int j = 0; j < new_bin->num_particles; j++){
                 apply_force(_particles[bin->particle_ids[i]], _particles[new_bin->particle_ids[j]], dmin, davg, navg);
         }
     }
@@ -144,13 +144,13 @@ int main( int argc, char **argv )
     set_size( n );
     set_size2( n );                          // set size to sqrt(density==0.0005*n==500) used to initialize position of the particles in next step
     bin_dict* bins = (bin_dict*) malloc(num_bins * sizeof(bin_dict));
-    FOR (i, num_bins)
+    for(int i = 0; i < num_bins; i++){
         bins[i].particle_ids = (int*) malloc(n*sizeof(int));
     init_bins(bins);
 
 
     init_particles( n, particles );
-    FOR (i, n)
+    for(int i = 0; i < n; i++){
         move_v2(particles[i], i);   // assign each particle to a bin
 
     binning(bins, n);    // calculate number of particles in each bin
@@ -160,8 +160,7 @@ int main( int argc, char **argv )
     //
     double simulation_time = read_timer( ); // reads time using function in commons.cpp
 
-    FOR(step, NSTEPS)
-    {
+    for(int step = 0; step < NSTEPS; step++){
 
         navg = 0;
         davg = 0.0;
@@ -169,19 +168,19 @@ int main( int argc, char **argv )
         //
         //  compute forces
         //
-	      FOR(i, n){
+        for(int i = 0; i < n; i++){
             particles[i].ax = 0;    // initialize acceleration after each step
             particles[i].ay = 0;    // initialize acceleration after each step
         }
 
-        FOR(i, num_bins){
+        for(int i = 0; i < num_bins; i++){
             apply_force_bin(particles, bins, i, &dmin, &davg, &navg);    // apply forces in particles for bin by bin with only neighboring bins
         }
 
         //
         //  move particles
         //
-        for( int i = 0; i < n; i++ )
+        for(int i = 0; i < n; i++){
             move_v2( particles[i], i );
 
         binning( bins, n);            // reset number of particles in each bin and calculate again
