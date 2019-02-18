@@ -8,7 +8,6 @@
 #define cutoff  0.01
 #define PARICLE_BIN(p) (int)(floor(p.x / cutoff) * bin_size + floor(p.y / cutoff))
 
-double size2;
 int bin_size;
 int num_bins;
 int * bin_Ids;
@@ -21,9 +20,9 @@ typedef struct{
 } bin;
 
 void init_bins( bin * bins ) {
+    int x, y, i, k, next_x, next_y, new_id;
     int dx[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
     int dy[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};
-    int x, y, i, k, next_x, next_y, new_id;
     for(i = 0; i < num_bins; ++i){
         bins[i].num_nei = 0;
         bins[i].nei_id = (int *) malloc(9 * sizeof(int));
@@ -105,8 +104,7 @@ int main( int argc, char **argv )
 
     set_size(n);
 
-    size2 = sqrt(density * n);
-    bin_size = (int)ceil(size2 / cutoff);
+    bin_size = (int) ceil(sqrt(density * n) / cutoff);
     num_bins = bin_size * bin_size;
     bin_Ids =  (int *) malloc(n * sizeof(int));
     bin * bins = (bin *) malloc(num_bins * sizeof(bin));
