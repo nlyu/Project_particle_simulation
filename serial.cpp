@@ -21,7 +21,7 @@ typedef struct{
     int num_nei;
     int * nei_id;
     int * par_id;
-};
+} bin_dict;
 
 void init_bins( bin_dict * bins ) {
     int dx[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
