@@ -18,6 +18,12 @@ public:
     int num_par, num_nei;   //counter
     int * nei_id;           //neighboring bins
     int * par_id;           //paricles in the bins
+
+    bin(){
+        num_nei = num_par = 0;
+        nei_id = new int[9];
+        par_id = new int[particle_num];
+    }
 };                          //the bin that separate the zone
 
 /*
@@ -30,9 +36,6 @@ void init_bins(bin * bins){
 
     //for each bins
     for(i = 0; i < num_bins; ++i){
-        bins[i].num_nei = 0;
-        bins[i].nei_id = (int *) malloc(9 * sizeof(int));
-        bins[i].par_id = (int *) malloc(particle_num * sizeof(int));
         x = i % bin_size;
         y = (i - x) / bin_size;
         //for bin's neighbor
@@ -126,8 +129,8 @@ int main( int argc, char **argv )
     //initialize of global var and bin
     bin_size = (int) ceil(sqrt(density * particle_num) / cutoff);
     num_bins = bin_size * bin_size;
-    bin_Ids =  (int *) malloc(particle_num * sizeof(int));
-    bin * bins = (bin *) malloc(num_bins * sizeof(bin));
+    bin_Ids =  new int[particle_num];
+    bin * bins = new bin[num_bins];
 
     //initialize
     init_bins(bins);
