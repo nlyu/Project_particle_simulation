@@ -19,7 +19,7 @@ public:
     int * par_id;
 };
 
-void init_bins( bin * bins ) {
+void init_bins(bin * bins){
     int x, y, i, k, next_x, next_y, new_id;
     int dx[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
     int dy[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};
@@ -38,11 +38,10 @@ void init_bins( bin * bins ) {
             }
         }
     }
-
     return;
 }
 
-void binning(bin * bins, int n) {
+void binning(bin * bins, int n){
     int i, id, idx;
     for(i = 0; i < num_bins; ++i){
         bins[i].num_par = 0;
@@ -54,14 +53,13 @@ void binning(bin * bins, int n) {
         bins[id].par_id[idx] = i;
         bins[id].num_par++;
     }
-
     return;
 }
 
-void apply_force_bin(particle_t * _particles, bin * bins, int _binId, double * dmin, double * davg, int * navg) {
-    bin * cur_bin = bins + _binId;
+void apply_force_bin(particle_t * _particles, bin * bins, int i, double * dmin, double * davg, int * navg){
+    bin * cur_bin = bins + i;
     bin * new_bin;
-    int i, k, j, par_cur, par_nei;
+    int k, j, par_cur, par_nei;
     for(i = 0; i < cur_bin->num_par; ++i){
         for(k = 0; k < cur_bin->num_nei; ++k){
             new_bin = bins + cur_bin->nei_id[k];
@@ -72,7 +70,6 @@ void apply_force_bin(particle_t * _particles, bin * bins, int _binId, double * d
             }
         }
     }
-
     return;
 }
 
