@@ -5,11 +5,7 @@
 #include "common.h"
 
 #define density 0.0005
-#define mass    0.01
 #define cutoff  0.01
-
-#define min_r   (cutoff / 100)
-#define dt      0.0005
 
 double size2;
 int bin_size;
@@ -21,9 +17,9 @@ typedef struct{
     int num_nei;
     int * nei_id;
     int * par_id;
-} bin_dict;
+} bin;
 
-void init_bins( bin_dict * bins ) {
+void init_bins( bin * bins ) {
     int dx[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
     int dy[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};
     for(int i = 0; i < num_bins; i++){
@@ -43,7 +39,7 @@ void init_bins( bin_dict * bins ) {
     }
 }
 
-void binning(bin_dict * bins, int n) {
+void binning(bin * bins, int n) {
     int i, id, idx;
     for(i = 0; i < num_bins; i++){
         bins[i].num_par = 0;
@@ -59,14 +55,15 @@ void binning(bin_dict * bins, int n) {
     return;
 }
 
-void apply_force_bin(particle_t * _particles, bin_dict * bins, int _binId, double * dmin, double * davg, int * navg) {
-    bin_dict * bin = bins + _binId;         // make program work on specific bin with ID _binID
-
-    for(int i = 0; i < bin->num_par; i++){
-        for(int k = 0; k < bin->num_nei; k++){
-            bin_dict * new_bin = bins + bin->nei_id[k];
-            for(int j = 0; j < new_bin->num_par; j++){
-                apply_force(_particles[bin->par_id[i]], _particles[new_bin->par_id[j]], dmin, davg, navg);
+void apply_force_bin(particle_t * _particles, bin * bins, int _binId, double * dmin, double * davg, int * navg) {
+    bin * cur_bin = bins + _binId;
+    bin * new_bin;
+    int i, k, j;
+    for(i = 0; i < cur_bin->num_par; i++){
+        for(k = 0; k < cur_bin->num_nei; k++){
+            new_bin = bins + cur_bin->nei_id[k];
+            for(j = 0; j < new_bin->num_par; j++){
+                apply_force(_particles[cur_bin->par_id[i]], _particles[new_bin->par_id[j]], dmin, davg, navg);
             }
         }
     }
@@ -74,7 +71,7 @@ void apply_force_bin(particle_t * _particles, bin_dict * bins, int _binId, doubl
 
 int main( int argc, char **argv )
 {
-    int navg,nabsavg=0;
+    int navg, nabsavg = 0;
     double davg,dmin, absmin=1.0, absavg=0.0;
 
     if( find_option( argc, argv, "-h" ) >= 0 )
@@ -101,21 +98,21 @@ int main( int argc, char **argv )
     set_size(n);
 
     size2 = sqrt(density * n);
-    bin_size = (int)ceil(size2 / cutoff);      // use cutoff to divide bins each with size cutoff
-    num_bins = bin_size * bin_size;           // total number of bins in domain
+    bin_size = (int)ceil(size2 / cutoff);
+    num_bins = bin_size * bin_size;
     bin_Ids =  (int *) malloc(n * sizeof(int));
-
-    bin_dict * bins = (bin_dict *) malloc(num_bins * sizeof(bin_dict));
+    bin * bins = (bin *) malloc(num_bins * sizeof(bin));
 
     for(int i = 0; i < num_bins; i++){
-        bins[i].par_id = (int*) malloc(n*sizeof(int));
+        bins[i].par_id = (int *) malloc(n * sizeof(int));
     }
 
     init_bins(bins);
 
     init_particles( n, particles );
+
     for(int i = 0; i < n; i++){
-        move(particles[i]);   // assign each particle to a bin
+        move(particles[i]);
         particles[i].ax = 0;
         particles[i].ay = 0;
         bin_Ids[i] = (int)(floor(particles[i].x / cutoff) * bin_size
@@ -123,7 +120,7 @@ int main( int argc, char **argv )
 
     }
 
-    binning(bins, n);    // calculate number of particles in each bin
+    binning(bins, n);
 
     //
     //  simulate a number of time steps
@@ -139,11 +136,11 @@ int main( int argc, char **argv )
         //  compute forces
         //
         for(int i = 0; i < n; i++){
-            particles[i].ax = particles[i].ay = 0;    // initialize acceleration after each step
+            particles[i].ax = particles[i].ay = 0;
         }
 
         for(int i = 0; i < num_bins; i++){
-            apply_force_bin(particles, bins, i, &dmin, &davg, &navg);    // apply forces in particles for bin by bin with only neighboring bins
+            apply_force_bin(particles, bins, i, &dmin, &davg, &navg);
         }
 
         //
