@@ -8,6 +8,7 @@
 #define cutoff  0.01
 #define PARICLE_BIN(p) (int)(floor(p.x / cutoff) * bin_size + floor(p.y / cutoff))
 
+int particle_num;
 int bin_size;
 int num_bins;
 int * bin_Ids;
@@ -22,7 +23,7 @@ public:
 /*
     initialize the bins
 */
-void init_bins(bin * bins, int n){
+void init_bins(bin * bins){
     int x, y, i, k, next_x, next_y, new_id;
     int dx[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
     int dy[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};
@@ -31,7 +32,7 @@ void init_bins(bin * bins, int n){
     for(i = 0; i < num_bins; ++i){
         bins[i].num_nei = 0;
         bins[i].nei_id = (int *) malloc(9 * sizeof(int));
-        bins[i].par_id = (int *) malloc(n * sizeof(int));
+        bins[i].par_id = (int *) malloc(particle_num * sizeof(int));
         x = i % bin_size;
         y = (i - x) / bin_size;
         //for bin's neighbor
@@ -51,7 +52,7 @@ void init_bins(bin * bins, int n){
 /*
    update the particles in bins
 */
-void binning(bin * bins, int n){
+void binning(bin * bins){
     int i, id, idx;
     //clear particle counter
     for(i = 0; i < num_bins; ++i){
@@ -59,7 +60,7 @@ void binning(bin * bins, int n){
     }
 
     //set particles into bin
-    for(i = 0; i < n; ++i){
+    for(i = 0; i < particle_num; ++i){
         id = bin_Ids[i];
         idx = bins[id].num_par;
         bins[id].par_id[idx] = i;
@@ -110,7 +111,7 @@ int main( int argc, char **argv )
         return 0;
     }
 
-    int n = read_int( argc, argv, "-n", 1000 );
+    particle_num = read_int( argc, argv, "-n", 1000 );
 
     char *savename = read_string( argc, argv, "-o", NULL );
     char *sumname = read_string( argc, argv, "-s", NULL );
@@ -118,29 +119,29 @@ int main( int argc, char **argv )
     FILE *fsave = savename ? fopen( savename, "w" ) : NULL;
     FILE *fsum = sumname ? fopen ( sumname, "a" ) : NULL;
 
-    particle_t * particles = (particle_t *) malloc(n * sizeof(particle_t));
+    particle_t * particles = (particle_t *) malloc(particle_num * sizeof(particle_t));
 
-    set_size(n);
+    set_size(particle_num);
 
     //initialize of global var and bin
-    bin_size = (int) ceil(sqrt(density * n) / cutoff);
+    bin_size = (int) ceil(sqrt(density * particle_num) / cutoff);
     num_bins = bin_size * bin_size;
-    bin_Ids =  (int *) malloc(n * sizeof(int));
+    bin_Ids =  (int *) malloc(particle_num * sizeof(int));
     bin * bins = (bin *) malloc(num_bins * sizeof(bin));
 
     //initialize
-    init_bins(bins, n);
-    init_particles(n, particles);
+    init_bins(bins);
+    init_particles(particle_num, particles);
 
     //allocate the position of particle to bins
-    for(int i = 0; i < n; ++i){
+    for(int i = 0; i < particle_num; ++i){
         move(particles[i]);
         particles[i].ax = particles[i].ay = 0;
         bin_Ids[i] = PARICLE_BIN(particles[i]);
     }
 
     //map the bins mack to particle
-    binning(bins, n);
+    binning(bins);
 
     //
     //  simulate a number of time steps
@@ -155,7 +156,7 @@ int main( int argc, char **argv )
         //
         //  compute forces
         //
-        for(int i = 0; i < n; ++i){
+        for(int i = 0; i < particle_num; ++i){
             particles[i].ax = particles[i].ay = 0;
         }
 
@@ -166,13 +167,13 @@ int main( int argc, char **argv )
         //
         //  move particles
         //
-        for(int i = 0; i < n; ++i){
+        for(int i = 0; i < particle_num; ++i){
             move(particles[i]);
             particles[i].ax = particles[i].ay = 0;
             bin_Ids[i] = PARICLE_BIN(particles[i]);
         }
 
-        binning(bins, n);            // reset number of particles in each bin and calculate again
+        binning(bins);            // reset number of particles in each bin and calculate again
 
         if(find_option( argc, argv, "-no" ) == -1)
         {
