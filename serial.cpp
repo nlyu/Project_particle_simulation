@@ -100,7 +100,7 @@ int main( int argc, char **argv )
     FILE *fsave = savename ? fopen( savename, "w" ) : NULL;
     FILE *fsum = sumname ? fopen ( sumname, "a" ) : NULL;
 
-    particle_t *particles = (particle_t*) malloc( n * sizeof(particle_t) );
+    particle_t * particles = (particle_t *) malloc(n * sizeof(particle_t));
 
     set_size(n);
 
@@ -115,13 +115,11 @@ int main( int argc, char **argv )
     }
 
     init_bins(bins);
-
     init_particles(n, particles);
 
     for(int i = 0; i < n; i++){
         move(particles[i]);
-        particles[i].ax = 0;
-        particles[i].ay = 0;
+        particles[i].ax = particles[i].ay = 0;
         bin_Ids[i] = (int)(floor(particles[i].x / cutoff) * bin_size
                              + floor(particles[i].y / cutoff));
 
@@ -167,11 +165,12 @@ int main( int argc, char **argv )
           //
           // Computing statistical data
           //
-          if (navg) {
+          if(navg){
             absavg +=  davg/navg;
             nabsavg++;
           }
-          if (dmin < absmin) absmin = dmin;
+
+          if(dmin < absmin) absmin = dmin;
 
         }
     }
