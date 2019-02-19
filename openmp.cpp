@@ -156,10 +156,8 @@ int main( int argc, char **argv )
     //
     double simulation_time = read_timer( );
 
-    #pragma omp parallel private(dmin)
-    {
     numthreads = omp_get_num_threads();
-    for( int step = 0; step < NSTEPS; step++ )
+    for(int step = 0; step < NSTEPS; step++)
     {
         navg = 0;
         davg = 0.0;
@@ -167,7 +165,7 @@ int main( int argc, char **argv )
         //
         //  compute all forces
         //
-        #pragma omp for
+        #pragma omp parallel for
         for(int i = 0; i < particle_num; ++i){
             particles[i].ax = particles[i].ay = 0;
         }
@@ -180,7 +178,7 @@ int main( int argc, char **argv )
         //
         //  move particles
         //
-        #pragma omp for
+        #pragma omp parallel for
         for(int i = 0; i < particle_num; ++i){
             move(particles[i]);
             particles[i].ax = particles[i].ay = 0;
@@ -212,7 +210,6 @@ int main( int argc, char **argv )
               save( fsave, n, particles );
         }
     }
-}
     simulation_time = read_timer( ) - simulation_time;
 
     printf( "n = %d,threads = %d, simulation time = %g seconds", n,numthreads, simulation_time);
