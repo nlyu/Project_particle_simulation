@@ -153,22 +153,8 @@ int main( int argc, char **argv )
     for(int i = 0; i < num_bins; ++i)
         omp_init_lock(locks + i);
 
-    int id, idx;
-    //clear particle counter
-    for(int i = 0; i < num_bins; ++i){
-        bins[i].num_par = 0;
-    }
 
-    //set particles into bin
-    #pragma omp parallel for
-    for(int i = 0; i < particle_num; ++i){
-        id = bin_Ids[i];
-        idx = bins[id].num_par;
-        omp_set_lock(locks + id);
-        bins[id].par_id[idx] = i;
-        bins[id].num_par++;
-        omp_unset_lock(locks + id);
-    }
+    binning(bins);
 
     //
     //  simulate a number of time steps
@@ -206,22 +192,24 @@ int main( int argc, char **argv )
             bin_Ids[i] = PARICLE_BIN(particles[i]);
         }
 
-        int id, idx;
-        //clear particle counter
-        for(int i = 0; i < num_bins; ++i){
-            bins[i].num_par = 0;
-        }
-
-        //set particles into bin
-        #pragma omp for
-        for(int i = 0; i < particle_num; ++i){
-            id = bin_Ids[i];
-            idx = bins[id].num_par;
-            omp_set_lock(locks + id);
-            bins[id].par_id[idx] = i;
-            bins[id].num_par++;
-            omp_unset_lock(locks + id);
-        }
+        #pragma omp critical 
+        binning(bins);
+        // int id, idx;
+        // //clear particle counter
+        // for(int i = 0; i < num_bins; ++i){
+        //     bins[i].num_par = 0;
+        // }
+        // 
+        // //set particles into bin
+        // #pragma omp for
+        // for(int i = 0; i < particle_num; ++i){
+        //     id = bin_Ids[i];
+        //     idx = bins[id].num_par;
+        //     omp_set_lock(locks + id);
+        //     bins[id].par_id[idx] = i;
+        //     bins[id].num_par++;
+        //     omp_unset_lock(locks + id);
+        // }
 
         if(find_option( argc, argv, "-no" ) == -1 )
         {
