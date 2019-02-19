@@ -37,6 +37,7 @@ void init_bins(bin * bins){
     int dy[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};
 
     //for each bins
+    #pragma omp parallel for
     for(i = 0; i < num_bins; ++i){
         x = i % bin_size;
         y = (i - x) / bin_size;
@@ -100,7 +101,6 @@ void apply_force_bin(particle_t * _particles, bin * bins, int i, double * dmin, 
     return;
 }
 
-
 //
 //  benchmarking program
 //
@@ -128,8 +128,28 @@ int main( int argc, char **argv )
     FILE *fsum = sumname ? fopen ( sumname, "a" ) : NULL;
 
     particle_t *particles = (particle_t*) malloc( n * sizeof(particle_t) );
+    particle_num = n;
     set_size( n );
-    init_particles( n, particles );
+
+    //initialize of global var and bin
+    bin_size = (int) ceil(sqrt(density * particle_num) / cutoff);
+    num_bins = bin_size * bin_size;
+    bin_Ids =  new int[particle_num];
+    bin * bins = new bin[num_bins];
+
+    //initialize
+    init_bins(bins);
+    init_particles(n, particles);
+
+    //allocate the position of particle to bins
+    for(int i = 0; i < particle_num; ++i){
+        move(particles[i]);
+        particles[i].ax = particles[i].ay = 0;
+        bin_Ids[i] = PARICLE_BIN(particles[i]);
+    }
+
+    //map the bins mack to particle
+    binning(bins);
 
     //
     //  simulate a number of time steps
@@ -147,21 +167,28 @@ int main( int argc, char **argv )
         //
         //  compute all forces
         //
-        #pragma omp for reduction (+:navg) reduction(+:davg)
-        for( int i = 0; i < n; i++ )
-        {
+        #pragma omp for
+        for(int i = 0; i < particle_num; ++i){
             particles[i].ax = particles[i].ay = 0;
-            for (int j = 0; j < n; j++ )
-                apply_force( particles[i], particles[j], &dmin, &davg, &navg);
         }
 
+        #pragma omp for reduction (+:navg) reduction(+:davg)
+        for(int i = 0; i < num_bins; ++i){
+            apply_force_bin(particles, bins, i, &dmin, &davg, &navg);
+        }
 
         //
         //  move particles
         //
         #pragma omp for
-        for( int i = 0; i < n; i++)
+        for(int i = 0; i < particle_num; ++i){
             move(particles[i]);
+            particles[i].ax = particles[i].ay = 0;
+            bin_Ids[i] = PARICLE_BIN(particles[i]);
+        }
+
+        #pragma omp critical
+        binning(bins);
 
         if(find_option( argc, argv, "-no" ) == -1 )
         {
