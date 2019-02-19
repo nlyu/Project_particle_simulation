@@ -158,7 +158,6 @@ int main( int argc, char **argv )
     for(int i = 0; i < num_bins; ++i)
         omp_init_lock(&locks[i]);
 
-    int i, id, idx;
     //clear particle counter
     #pragma omp parallel for
     for(i = 0; i < num_bins; ++i){
@@ -167,14 +166,13 @@ int main( int argc, char **argv )
 
     //set particles into bin
     #pragma omp parallel for
-    for(i = 0; i < particle_num; ++i){
-        id = bin_Ids[i];
-        printf("thread: %d locked, %d, %d\n", omp_get_thread_num(), id, bins[id].num_par);
+    for(int i = 0; i < particle_num; ++i){
+        int id = bin_Ids[i];
         omp_set_lock(&locks[id]);
-        bins[id].par_id[bins[id].num_par] = i;
+        int idx = bins[id].num_par;
+        bins[id].par_id[idx] = i;
         bins[id].num_par++;
         omp_unset_lock(&locks[id]);
-        printf("thread: %d unlocked, %d, %d\n", omp_get_thread_num(), id, bins[id].num_par);
     }
 
     printf("done\n");
