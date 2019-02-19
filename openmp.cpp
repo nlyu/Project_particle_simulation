@@ -149,7 +149,6 @@ int main( int argc, char **argv )
         move(particles[i]);
         particles[i].ax = particles[i].ay = 0;
         bin_Ids[i] = PARICLE_BIN(particles[i]);
-        printf("%d\n", bin_Ids[i]);
     }
 
     printf("bins size: %d\n", num_bins);
@@ -171,6 +170,7 @@ int main( int argc, char **argv )
     for(i = 0; i < particle_num; ++i){
         id = bin_Ids[i];
         idx = bins[id].num_par;
+        printf("%d\n", id);
         omp_set_lock(locks + id);
         bins[id].par_id[idx] = i;
         bins[id].num_par++;
