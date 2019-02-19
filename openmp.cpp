@@ -154,12 +154,13 @@ int main( int argc, char **argv )
     printf("bins size: %d\n", num_bins);
 
     //map the bins mack to particle
-    omp_lock_t * locks = (omp_lock_t *) malloc(num_bins * sizeof(omp_lock_t));
+    omp_lock_t * locks = new omp_lock_t[num_bins];
     for(int i = 0; i < num_bins; ++i)
-        omp_init_lock(locks + i);
+        omp_init_lock(&locks[i]);
 
     int i, id, idx;
     //clear particle counter
+    #pragma omp parallel for
     for(i = 0; i < num_bins; ++i){
         bins[i].num_par = 0;
     }
@@ -170,10 +171,12 @@ int main( int argc, char **argv )
         id = bin_Ids[i];
         idx = bins[id].num_par;
         printf("%d\n", id);
-        omp_set_lock(locks + id);
+        omp_set_lock(&locks[id]);
+        printf("locked");
         bins[id].par_id[idx] = i;
         bins[id].num_par++;
-        omp_unset_lock(locks + id);
+        printf("unlocked");
+        omp_unset_lock(&locks[id]);
     }
 
     //
