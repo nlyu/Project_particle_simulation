@@ -169,15 +169,15 @@ int main( int argc, char **argv )
     #pragma omp parallel for
     for(i = 0; i < particle_num; ++i){
         id = bin_Ids[i];
-        printf("%d\n", id);
+        printf("thread: %d locked, %d, %d\n", omp_get_thread_num(), id, bins[id].num_par);
         omp_set_lock(&locks[id]);
-        printf("locked");
         bins[id].par_id[bins[id].num_par] = i;
         bins[id].num_par++;
-        printf("unlocke\n");
         omp_unset_lock(&locks[id]);
+        printf("thread: %d unlocked, %d, %d\n", omp_get_thread_num(), id, bins[id].num_par);
     }
 
+    printf("done\n");
     //
     //  simulate a number of time steps
     //
