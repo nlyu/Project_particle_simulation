@@ -172,10 +172,9 @@ int main( int argc, char **argv )
         printf("%d\n", id);
         omp_set_lock(&locks[id]);
         printf("locked");
-        idx = bins[id].num_par;
-        bins[id].par_id[idx] = i;
+        bins[id].par_id[bins[id].num_par] = i;
         bins[id].num_par++;
-        printf("unlocked");
+        printf("unlocke\n");
         omp_unset_lock(&locks[id]);
     }
 
