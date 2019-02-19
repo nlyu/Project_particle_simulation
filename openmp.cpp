@@ -5,6 +5,102 @@
 #include "common.h"
 #include "omp.h"
 
+
+#define density 0.0005
+#define cutoff  0.01
+#define PARICLE_BIN(p) (int)(floor(p.x / cutoff) * bin_size + floor(p.y / cutoff))
+
+int particle_num;
+int bin_size;
+int num_bins;
+int * bin_Ids;
+
+class bin{
+public:
+    int num_par, num_nei;   //counter
+    int * nei_id;           //neighboring bins
+    int * par_id;           //paricles in the bins
+
+    bin(){
+        num_nei = num_par = 0;
+        nei_id = new int[9];
+        par_id = new int[particle_num];
+    }
+};                          //the bin that separate the zone
+
+/*
+    initialize the bins
+*/
+void init_bins(bin * bins){
+    int x, y, i, k, next_x, next_y, new_id;
+    int dx[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
+    int dy[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};
+
+    //for each bins
+    for(i = 0; i < num_bins; ++i){
+        x = i % bin_size;
+        y = (i - x) / bin_size;
+        //for bin's neighbor
+        for(k = 0; k < 9; ++k){
+            next_x = x + dx[k];
+            next_y = y + dy[k];
+            if (next_x >= 0 && next_y >= 0 && next_x < bin_size && next_y < bin_size) {
+                new_id = next_x + next_y * bin_size;
+                bins[i].nei_id[bins[i].num_nei] = new_id;
+                bins[i].num_nei++;
+            }
+        }
+    }
+    return;
+}
+
+/*
+   update the particles in bins
+*/
+void binning(bin * bins){
+    int i, id, idx;
+    //clear particle counter
+    for(i = 0; i < num_bins; ++i){
+        bins[i].num_par = 0;
+    }
+
+    //set particles into bin
+    for(i = 0; i < particle_num; ++i){
+        id = bin_Ids[i];
+        idx = bins[id].num_par;
+        bins[id].par_id[idx] = i;
+        bins[id].num_par++;
+    }
+    return;
+}
+
+/*
+  apply particle force in each bin
+*/
+void apply_force_bin(particle_t * _particles, bin * bins, int i, double * dmin, double * davg, int * navg){
+    bin * cur_bin = bins + i;
+    bin * new_bin;
+    int k, j, par_cur, par_nei;
+
+    //for all particles in this bin
+    for(i = 0; i < cur_bin->num_par; ++i){
+        //look the neighbor around including itself
+        for(k = 0; k < cur_bin->num_nei; ++k){
+            new_bin = bins + cur_bin->nei_id[k];
+            //for all particle in the neighbor bin
+            for(j = 0; j < new_bin->num_par; ++j){
+                par_cur = cur_bin->par_id[i];
+                par_nei = new_bin->par_id[j];
+                apply_force(_particles[par_cur],
+                            _particles[par_nei],
+                            dmin, davg, navg);
+            }
+        }
+    }
+    return;
+}
+
+
 //
 //  benchmarking program
 //
@@ -51,7 +147,7 @@ int main( int argc, char **argv )
         //
         //  compute all forces
         //
-        // #pragma omp for reduction (+:navg) reduction(+:davg)
+        #pragma omp for reduction (+:navg) reduction(+:davg)
         for( int i = 0; i < n; i++ )
         {
             particles[i].ax = particles[i].ay = 0;
@@ -63,7 +159,7 @@ int main( int argc, char **argv )
         //
         //  move particles
         //
-        // #pragma omp for
+        #pragma omp for
         for( int i = 0; i < n; i++)
             move(particles[i]);
 
