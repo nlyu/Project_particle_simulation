@@ -149,7 +149,10 @@ int main( int argc, char **argv )
         move(particles[i]);
         particles[i].ax = particles[i].ay = 0;
         bin_Ids[i] = PARICLE_BIN(particles[i]);
+        printf("%d\n", bin_Ids[i]);
     }
+
+    printf("bins size: %d\n", num_bins);
 
     //map the bins mack to particle
     omp_lock_t * locks = (omp_lock_t *) malloc(num_bins * sizeof(omp_lock_t));
