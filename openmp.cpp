@@ -164,11 +164,14 @@ int main( int argc, char **argv )
     }
 
     //set particles into bin
+    #pragma omp parallel for
     for(i = 0; i < particle_num; ++i){
         id = bin_Ids[i];
         idx = bins[id].num_par;
+        omp_set_lock(locks + id);
         bins[id].par_id[idx] = i;
         bins[id].num_par++;
+        omp_unset_lock(locks + id);
     }
 
     //
