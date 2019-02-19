@@ -166,6 +166,10 @@ int main( int argc, char **argv )
         //
         //  compute all forces
         //
+        for(int i = 0; i < particle_num; ++i){
+            particles[i].ax = particles[i].ay = 0;
+        }
+
         #pragma omp for reduction (+:navg) reduction(+:davg)
         for(int i = 0; i < num_bins; ++i){
             apply_force_bin(particles, bins, i, &dmin, &davg, &navg);
@@ -175,7 +179,6 @@ int main( int argc, char **argv )
         //
         //  move particles
         //
-        #pragma omp for
         for(int i = 0; i < particle_num; ++i){
             move(particles[i]);
             particles[i].ax = particles[i].ay = 0;
