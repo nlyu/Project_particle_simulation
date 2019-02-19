@@ -155,8 +155,8 @@ int main( int argc, char **argv )
     //
     double simulation_time = read_timer( );
 
-    #pragma omp parallel private(dmin)
-    {
+    //#pragma omp parallel private(dmin)
+    //{
     numthreads = omp_get_num_threads();
     for( int step = 0; step < NSTEPS; step++ )
     {
@@ -170,7 +170,7 @@ int main( int argc, char **argv )
             particles[i].ax = particles[i].ay = 0;
         }
 
-        #pragma omp for reduction (+:navg) reduction(+:davg)
+        // #pragma omp for reduction (+:navg) reduction(+:davg)
         for(int i = 0; i < num_bins; ++i){
             apply_force_bin(particles, bins, i, &dmin, &davg, &navg);
         }
@@ -209,7 +209,7 @@ int main( int argc, char **argv )
               save( fsave, n, particles );
         }
     }
-}
+//}
     simulation_time = read_timer( ) - simulation_time;
 
     printf( "n = %d,threads = %d, simulation time = %g seconds", n,numthreads, simulation_time);
