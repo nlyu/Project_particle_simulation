@@ -160,7 +160,7 @@ int main( int argc, char **argv )
 
     //clear particle counter
     #pragma omp parallel for
-    for(i = 0; i < num_bins; ++i){
+    for(int i = 0; i < num_bins; ++i){
         bins[i].num_par = 0;
     }
 
