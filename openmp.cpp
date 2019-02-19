@@ -158,7 +158,6 @@ int main( int argc, char **argv )
     for(int i = 0; i < num_bins; ++i)
         omp_init_lock(locks + i);
 
-
     int i, id, idx;
     //clear particle counter
     for(i = 0; i < num_bins; ++i){
