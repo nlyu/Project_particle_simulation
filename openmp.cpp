@@ -84,7 +84,7 @@ void apply_force_bin(particle_t * _particles, bin * bins, int i, double * dmin, 
     int k, j, par_cur, par_nei;
 
     //for all particles in this bin
-    #pragma omp for collapse(3)
+    #pragma omp for collapse(2)
     for(i = 0; i < cur_bin->num_par; ++i){
         //look the neighbor around including itself
         for(k = 0; k < cur_bin->num_nei; ++k){
