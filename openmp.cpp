@@ -37,7 +37,6 @@ void init_bins(bin * bins){
     int dy[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};
 
     //for each bins
-    #pragma omp for
     for(i = 0; i < num_bins; ++i){
         x = i % bin_size;
         y = (i - x) / bin_size;
@@ -85,13 +84,12 @@ void apply_force_bin(particle_t * _particles, bin * bins, int i, double * dmin, 
     int k, j, par_cur, par_nei;
 
     //for all particles in this bin
-    #pragma omp for
+    #pragma omp for collapse(3)
     for(i = 0; i < cur_bin->num_par; ++i){
         //look the neighbor around including itself
         for(k = 0; k < cur_bin->num_nei; ++k){
             new_bin = bins + cur_bin->nei_id[k];
             //for all particle in the neighbor bin
-            #pragma omp for
             for(j = 0; j < new_bin->num_par; ++j){
                 par_cur = cur_bin->par_id[i];
                 par_nei = new_bin->par_id[j];
