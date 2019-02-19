@@ -149,15 +149,36 @@ int main( int argc, char **argv )
     }
 
     //map the bins mack to particle
-    binning(bins);
+    omp_lock_t * locks = (omp_lock_t *) malloc(num_bins * sizeof(omp_lock_t));
+    for(int i = 0; i < num_bins; ++i)
+        omp_init_lock(locks + i);
+
+    int id, idx;
+    //clear particle counter
+    for(int i = 0; i < num_bins; ++i){
+        bins[i].num_par = 0;
+    }
+
+    //set particles into bin
+    #pragma omp parallel for
+    for(int i = 0; i < particle_num; ++i){
+        id = bin_Ids[i];
+        idx = bins[id].num_par;
+        omp_set_lock(locks + id);
+        bins[id].par_id[idx] = i;
+        bins[id].num_par++;
+        omp_unset_lock(locks + id);
+    }
 
     //
     //  simulate a number of time steps
     //
     double simulation_time = read_timer( );
 
+    #pragma omp parallel private(dmin)
+    {
     numthreads = omp_get_num_threads();
-    for(int step = 0; step < NSTEPS; step++)
+    for( int step = 0; step < NSTEPS; step++ )
     {
         navg = 0;
         davg = 0.0;
@@ -165,7 +186,7 @@ int main( int argc, char **argv )
         //
         //  compute all forces
         //
-        #pragma omp parallel for
+        #pragma omp for
         for(int i = 0; i < particle_num; ++i){
             particles[i].ax = particles[i].ay = 0;
         }
@@ -178,15 +199,29 @@ int main( int argc, char **argv )
         //
         //  move particles
         //
-        #pragma omp parallel for
+        #pragma omp for
         for(int i = 0; i < particle_num; ++i){
             move(particles[i]);
             particles[i].ax = particles[i].ay = 0;
             bin_Ids[i] = PARICLE_BIN(particles[i]);
         }
 
-        #pragma omp critical
-        binning(bins);
+        int id, idx;
+        //clear particle counter
+        for(int i = 0; i < num_bins; ++i){
+            bins[i].num_par = 0;
+        }
+
+        //set particles into bin
+        #pragma omp for
+        for(int i = 0; i < particle_num; ++i){
+            id = bin_Ids[i];
+            idx = bins[id].num_par;
+            omp_set_lock(locks + id);
+            bins[id].par_id[idx] = i;
+            bins[id].num_par++;
+            omp_unset_lock(locks + id);
+        }
 
         if(find_option( argc, argv, "-no" ) == -1 )
         {
@@ -210,6 +245,7 @@ int main( int argc, char **argv )
               save( fsave, n, particles );
         }
     }
+}
     simulation_time = read_timer( ) - simulation_time;
 
     printf( "n = %d,threads = %d, simulation time = %g seconds", n,numthreads, simulation_time);
