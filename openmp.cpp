@@ -127,6 +127,9 @@ int main( int argc, char **argv )
     FILE *fsave = savename ? fopen( savename, "w" ) : NULL;
     FILE *fsum = sumname ? fopen ( sumname, "a" ) : NULL;
 
+    int p = read_int(argc, argv, "-p", 1);
+    omp_set_num_threads(p);
+
     particle_t *particles = (particle_t*) malloc( n * sizeof(particle_t) );
     particle_num = n;
     set_size( n );
