@@ -154,7 +154,19 @@ int main( int argc, char **argv )
         omp_init_lock(locks + i);
 
 
-    binning(bins);
+    int i, id, idx;
+    //clear particle counter
+    for(i = 0; i < num_bins; ++i){
+        bins[i].num_par = 0;
+    }
+
+    //set particles into bin
+    for(i = 0; i < particle_num; ++i){
+        id = bin_Ids[i];
+        idx = bins[id].num_par;
+        bins[id].par_id[idx] = i;
+        bins[id].num_par++;
+    }
 
     //
     //  simulate a number of time steps
@@ -192,14 +204,14 @@ int main( int argc, char **argv )
             bin_Ids[i] = PARICLE_BIN(particles[i]);
         }
 
-        #pragma omp critical 
+        #pragma omp critical
         binning(bins);
         // int id, idx;
         // //clear particle counter
         // for(int i = 0; i < num_bins; ++i){
         //     bins[i].num_par = 0;
         // }
-        // 
+        //
         // //set particles into bin
         // #pragma omp for
         // for(int i = 0; i < particle_num; ++i){
