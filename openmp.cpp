@@ -10,7 +10,7 @@
 //
 int main( int argc, char **argv )
 {
-    int navg, nabsavg=0, numthreads;
+    int navg,nabsavg=0,numthreads;
     double dmin, absmin=1.0,davg,absavg=0.0;
 
     if( find_option( argc, argv, "-h" ) >= 0 )
@@ -33,19 +33,21 @@ int main( int argc, char **argv )
 
     particle_t *particles = (particle_t*) malloc( n * sizeof(particle_t) );
     set_size( n );
-    init_particles( n, particles);
+    init_particles( n, particles );
 
     //
     //  simulate a number of time steps
     //
     double simulation_time = read_timer( );
 
-    #pragma omp parallel private(dmin){
-        numthreads = omp_get_num_threads();
-    for( int step = 0; step < NSTEPS; step++ ){
+    #pragma omp parallel private(dmin)
+    {
+    numthreads = omp_get_num_threads();
+    for( int step = 0; step < NSTEPS; step++ )
+    {
         navg = 0;
         davg = 0.0;
-	      dmin = 1.0;
+	dmin = 1.0;
         //
         //  compute all forces
         //
@@ -77,7 +79,7 @@ int main( int argc, char **argv )
           }
 
           #pragma omp critical
-	        if (dmin < absmin) absmin = dmin;
+	  if (dmin < absmin) absmin = dmin;
 
           //
           //  save if necessary
@@ -90,7 +92,7 @@ int main( int argc, char **argv )
 }
     simulation_time = read_timer( ) - simulation_time;
 
-    printf( "n = %d,threads = %d, simulation time = %g seconds", n, numthreads, simulation_time);
+    printf( "n = %d,threads = %d, simulation time = %g seconds", n,numthreads, simulation_time);
 
     if( find_option( argc, argv, "-no" ) == -1 )
     {
