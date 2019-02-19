@@ -168,14 +168,13 @@ int main( int argc, char **argv )
     #pragma omp parallel for
     for(int i = 0; i < particle_num; ++i){
         int id = bin_Ids[i];
-        omp_set_lock(&locks[id]);
+        omp_set_lock(&locks[id]); //这是全部的精髓！！！！！！！！！！！
         int idx = bins[id].num_par;
         bins[id].par_id[idx] = i;
         bins[id].num_par++;
         omp_unset_lock(&locks[id]);
     }
 
-    printf("done\n");
     //
     //  simulate a number of time steps
     //
@@ -212,24 +211,23 @@ int main( int argc, char **argv )
             bin_Ids[i] = PARICLE_BIN(particles[i]);
         }
 
-        #pragma omp critical
-        binning(bins);
-        // int id, idx;
-        // //clear particle counter
-        // for(int i = 0; i < num_bins; ++i){
-        //     bins[i].num_par = 0;
-        // }
-        //
-        // //set particles into bin
-        // #pragma omp for
-        // for(int i = 0; i < particle_num; ++i){
-        //     id = bin_Ids[i];
-        //     idx = bins[id].num_par;
-        //     omp_set_lock(locks + id);
-        //     bins[id].par_id[idx] = i;
-        //     bins[id].num_par++;
-        //     omp_unset_lock(locks + id);
-        // }
+        //clear particle counter
+        #pragma omp for
+        for(int i = 0; i < num_bins; ++i){
+            bins[i].num_par = 0;
+        }
+
+        //set particles into bin
+        #pragma omp for
+        for(int i = 0; i < particle_num; ++i){
+            int id = bin_Ids[i];
+            omp_set_lock(&locks[id]);
+            int idx = bins[id].num_par;
+            bins[id].par_id[idx] = i;
+            bins[id].num_par++;
+            omp_unset_lock(&locks[id]);
+        }
+
 
         if(find_option( argc, argv, "-no" ) == -1 )
         {
