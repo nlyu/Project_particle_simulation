@@ -23,10 +23,6 @@ export OMP_NUM_THREADS=16
 srun -N 1 -n 1 -c 16 ./openmp -n 500 -o openmp.txt
 export OMP_NUM_THREADS=32
 srun -N 1 -n 1 -c 32 ./openmp -n 500 -o openmp.txt
-export OMP_NUM_THREADS=64
-srun -N 1 -n 1 -c 64 ./openmp -n 500 -o openmp.txt
-export OMP_NUM_THREADS=128
-srun -N 1 -n 1 -c 128 ./openmp -n 500 -o openmp.txt
 
 export OMP_NUM_THREADS=2
 srun -N 1 -n 1 -c 2 ./openmp -n 500 -o openmp.txt

@@ -65,7 +65,6 @@ void binning(bin * bins){
     }
 
     //set particles into bin
-    #pragma omp for
     for(i = 0; i < particle_num; ++i){
         id = bin_Ids[i];
         idx = bins[id].num_par;
@@ -84,7 +83,6 @@ void apply_force_bin(particle_t * _particles, bin * bins, int i, double * dmin, 
     int k, j, par_cur, par_nei;
 
     //for all particles in this bin
-    #pragma omp for collapse(2)
     for(i = 0; i < cur_bin->num_par; ++i){
         //look the neighbor around including itself
         for(k = 0; k < cur_bin->num_nei; ++k){
@@ -143,7 +141,6 @@ int main( int argc, char **argv )
     init_particles( n, particles );
 
     //allocate the position of particle to bins
-    #pragma omp for
     for(int i = 0; i < particle_num; ++i){
         move(particles[i]);
         particles[i].ax = particles[i].ay = 0;
