@@ -8,3 +8,11 @@
 #SBATCH -e serial.%j.error
 
 srun -n 1 -c 1 ./serial -n 500 -o serial.txt
+srun -n 1 -c 1 ./serial -n 1000 -o serial.txt
+srun -n 1 -c 1 ./serial -n 1500 -o serial.txt
+srun -n 1 -c 1 ./serial -n 2000 -o serial.txt
+srun -n 1 -c 1 ./serial -n 2500 -o serial.txt
+srun -n 1 -c 1 ./serial -n 3000 -o serial.txt
+srun -n 1 -c 1 ./serial -n 4000 -o serial.txt
+srun -n 1 -c 1 ./serial -n 5000 -o serial.txt
+srun -n 1 -c 1 ./serial -n 10000 -o serial.txt
