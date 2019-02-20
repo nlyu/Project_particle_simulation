@@ -227,7 +227,7 @@ int main( int argc, char **argv )
     // Printing summary data
     //
     if( fsum)
-        fprintf(fsum,"%d %d %g\n",n,numthreads,simulation_time);
+        fprintf(fsum,"%d %d %g\n",particle_num,numthreads,simulation_time);
 
     //
     // Clearing space
