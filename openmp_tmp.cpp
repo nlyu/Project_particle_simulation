@@ -158,7 +158,7 @@ int main( int argc, char **argv )
         //  compute all forces
         //
         #pragma omp for reduction (+:navg) reduction(+:davg)
-        for( int i = 0; i < n; i++ ) {
+        for( int i = 0; i < particle_num; i++ ) {
             particles[i].ax = particles[i].ay = 0;
             // for (int j = 0; j < n; j++ )
             //     apply_force( particles[i], particles[j],&dmin,&davg,&navg);
@@ -205,7 +205,7 @@ int main( int argc, char **argv )
 }
     simulation_time = read_timer( ) - simulation_time;
     
-    printf( "n = %d,threads = %d, simulation time = %g seconds", n,numthreads, simulation_time);
+    printf( "n = %d,threads = %d, simulation time = %g seconds", particle_num, numthreads, simulation_time);
 
     if( find_option( argc, argv, "-no" ) == -1 )
     {
