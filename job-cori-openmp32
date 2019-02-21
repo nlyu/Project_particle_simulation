@@ -7,78 +7,78 @@
 #SBATCH -o openmp32.%j.stdout
 #SBATCH -e openmp32.%j.error
 
-rm openmp.txt
-# strong scaling n = 1000
-export OMP_NUM_THREADS=2
-srun -N 1 -n 1 -c 2 ./openmp -n 1000 -o -no
-export OMP_NUM_THREADS=4
-srun -N 1 -n 1 -c 4 ./openmp -n 1000 -o -no
-export OMP_NUM_THREADS=8
-srun -N 1 -n 1 -c 8 ./openmp -n 1000 -o -no
-export OMP_NUM_THREADS=12
-srun -N 1 -n 1 -c 12 ./openmp -n 1000 -o -no
-export OMP_NUM_THREADS=16
-srun -N 1 -n 1 -c 16 ./openmp -n 1000 -o -no
-export OMP_NUM_THREADS=24
-srun -N 1 -n 1 -c 24 ./openmp -n 1000 -o -no
-export OMP_NUM_THREADS=32
-srun -N 1 -n 1 -c 32 ./openmp -n 1000 -o -no
-export OMP_NUM_THREADS=48
-srun -N 1 -n 1 -c 48 ./openmp -n 1000 -o -no
+# rm openmp.txt
+# # strong scaling n = 1000
+# export OMP_NUM_THREADS=2
+# srun -N 1 -n 1 -c 2 ./openmp -n 1000 -o -no
+# export OMP_NUM_THREADS=4
+# srun -N 1 -n 1 -c 4 ./openmp -n 1000 -o -no
+# export OMP_NUM_THREADS=8
+# srun -N 1 -n 1 -c 8 ./openmp -n 1000 -o -no
+# export OMP_NUM_THREADS=12
+# srun -N 1 -n 1 -c 12 ./openmp -n 1000 -o -no
+# export OMP_NUM_THREADS=16
+# srun -N 1 -n 1 -c 16 ./openmp -n 1000 -o -no
+# export OMP_NUM_THREADS=24
+# srun -N 1 -n 1 -c 24 ./openmp -n 1000 -o -no
+# export OMP_NUM_THREADS=32
+# srun -N 1 -n 1 -c 32 ./openmp -n 1000 -o -no
+# export OMP_NUM_THREADS=48
+# srun -N 1 -n 1 -c 48 ./openmp -n 1000 -o -no
 
-# strong scaling n = 8000
-export OMP_NUM_THREADS=2
-srun -N 1 -n 1 -c 2 ./openmp -n 8000 -o -no
-export OMP_NUM_THREADS=4
-srun -N 1 -n 1 -c 4 ./openmp -n 8000 -o -no
-export OMP_NUM_THREADS=8
-srun -N 1 -n 1 -c 8 ./openmp -n 8000 -o -no
-export OMP_NUM_THREADS=12
-srun -N 1 -n 1 -c 12 ./openmp -n 8000 -o -no
-export OMP_NUM_THREADS=16
-srun -N 1 -n 1 -c 16 ./openmp -n 8000 -o -no
-export OMP_NUM_THREADS=24
-srun -N 1 -n 1 -c 24 ./openmp -n 8000 -o -no
-export OMP_NUM_THREADS=32
-srun -N 1 -n 1 -c 32 ./openmp -n 8000 -o -no
-export OMP_NUM_THREADS=48
-srun -N 1 -n 1 -c 48 ./openmp -n 8000 -o -no
+# # strong scaling n = 8000
+# export OMP_NUM_THREADS=2
+# srun -N 1 -n 1 -c 2 ./openmp -n 8000 -o -no
+# export OMP_NUM_THREADS=4
+# srun -N 1 -n 1 -c 4 ./openmp -n 8000 -o -no
+# export OMP_NUM_THREADS=8
+# srun -N 1 -n 1 -c 8 ./openmp -n 8000 -o -no
+# export OMP_NUM_THREADS=12
+# srun -N 1 -n 1 -c 12 ./openmp -n 8000 -o -no
+# export OMP_NUM_THREADS=16
+# srun -N 1 -n 1 -c 16 ./openmp -n 8000 -o -no
+# export OMP_NUM_THREADS=24
+# srun -N 1 -n 1 -c 24 ./openmp -n 8000 -o -no
+# export OMP_NUM_THREADS=32
+# srun -N 1 -n 1 -c 32 ./openmp -n 8000 -o -no
+# export OMP_NUM_THREADS=48
+# srun -N 1 -n 1 -c 48 ./openmp -n 8000 -o -no
 
-# strong scaling n = 24000
-export OMP_NUM_THREADS=2
-srun -N 1 -n 1 -c 2 ./openmp -n 24000 -o -no
-export OMP_NUM_THREADS=4
-srun -N 1 -n 1 -c 4 ./openmp -n 24000 -o -no
-export OMP_NUM_THREADS=8
-srun -N 1 -n 1 -c 8 ./openmp -n 24000 -o -no
-export OMP_NUM_THREADS=12
-srun -N 1 -n 1 -c 12 ./openmp -n 24000 -o -no
-export OMP_NUM_THREADS=16
-srun -N 1 -n 1 -c 16 ./openmp -n 24000 -o -no
-export OMP_NUM_THREADS=24
-srun -N 1 -n 1 -c 24 ./openmp -n 24000 -o -no
-export OMP_NUM_THREADS=32
-srun -N 1 -n 1 -c 32 ./openmp -n 24000 -o -no
-export OMP_NUM_THREADS=48
-srun -N 1 -n 1 -c 48 ./openmp -n 24000 -o -no
+# # strong scaling n = 24000
+# export OMP_NUM_THREADS=2
+# srun -N 1 -n 1 -c 2 ./openmp -n 24000 -o -no
+# export OMP_NUM_THREADS=4
+# srun -N 1 -n 1 -c 4 ./openmp -n 24000 -o -no
+# export OMP_NUM_THREADS=8
+# srun -N 1 -n 1 -c 8 ./openmp -n 24000 -o -no
+# export OMP_NUM_THREADS=12
+# srun -N 1 -n 1 -c 12 ./openmp -n 24000 -o -no
+# export OMP_NUM_THREADS=16
+# srun -N 1 -n 1 -c 16 ./openmp -n 24000 -o -no
+# export OMP_NUM_THREADS=24
+# srun -N 1 -n 1 -c 24 ./openmp -n 24000 -o -no
+# export OMP_NUM_THREADS=32
+# srun -N 1 -n 1 -c 32 ./openmp -n 24000 -o -no
+# export OMP_NUM_THREADS=48
+# srun -N 1 -n 1 -c 48 ./openmp -n 24000 -o -no
 
-# strong scaling n = 100000
-export OMP_NUM_THREADS=2
-srun -N 1 -n 1 -c 2 ./openmp -n 100000 -o -no 
-export OMP_NUM_THREADS=4
-srun -N 1 -n 1 -c 4 ./openmp -n 100000 -o -no 
-export OMP_NUM_THREADS=8
-srun -N 1 -n 1 -c 8 ./openmp -n 100000 -o -no
-export OMP_NUM_THREADS=12
-srun -N 1 -n 1 -c 12 ./openmp -n 100000 -o -no
-export OMP_NUM_THREADS=16
-srun -N 1 -n 1 -c 16 ./openmp -n 100000 -o -no
-export OMP_NUM_THREADS=24
-srun -N 1 -n 1 -c 24 ./openmp -n 100000 -o -no
-export OMP_NUM_THREADS=32
-srun -N 1 -n 1 -c 32 ./openmp -n 100000 -o -no 
-export OMP_NUM_THREADS=48
-srun -N 1 -n 1 -c 48 ./openmp -n 100000 -o -no
+# # strong scaling n = 100000
+# export OMP_NUM_THREADS=2
+# srun -N 1 -n 1 -c 2 ./openmp -n 100000 -o -no 
+# export OMP_NUM_THREADS=4
+# srun -N 1 -n 1 -c 4 ./openmp -n 100000 -o -no 
+# export OMP_NUM_THREADS=8
+# srun -N 1 -n 1 -c 8 ./openmp -n 100000 -o -no
+# export OMP_NUM_THREADS=12
+# srun -N 1 -n 1 -c 12 ./openmp -n 100000 -o -no
+# export OMP_NUM_THREADS=16
+# srun -N 1 -n 1 -c 16 ./openmp -n 100000 -o -no
+# export OMP_NUM_THREADS=24
+# srun -N 1 -n 1 -c 24 ./openmp -n 100000 -o -no
+# export OMP_NUM_THREADS=32
+# srun -N 1 -n 1 -c 32 ./openmp -n 100000 -o -no 
+# export OMP_NUM_THREADS=48
+# srun -N 1 -n 1 -c 48 ./openmp -n 100000 -o -no
 
 # weak scaling 1000 particles/thread
 export OMP_NUM_THREADS=2
@@ -93,4 +93,18 @@ export OMP_NUM_THREADS=32
 srun -N 1 -n 1 -c 32 ./openmp -n 32000 -o -no 
 export OMP_NUM_THREADS=64
 srun -N 1 -n 1 -c 64 ./openmp -n 64000 -o -no 
+
+# weak scaling 2000 particles/thread
+export OMP_NUM_THREADS=2
+srun -N 1 -n 1 -c 2 ./openmp -n 4000 -o -no 
+export OMP_NUM_THREADS=4
+srun -N 1 -n 1 -c 4 ./openmp -n 8000 -o -no 
+export OMP_NUM_THREADS=8
+srun -N 1 -n 1 -c 8 ./openmp -n 16000 -o -no
+export OMP_NUM_THREADS=16
+srun -N 1 -n 1 -c 16 ./openmp -n 32000 -o -no 
+export OMP_NUM_THREADS=32
+srun -N 1 -n 1 -c 32 ./openmp -n 64000 -o -no 
+export OMP_NUM_THREADS=64
+srun -N 1 -n 1 -c 64 ./openmp -n 128000 -o -no 
 ./openmp -v openmp -s openmp.txt
