@@ -17,11 +17,12 @@ int * bin_Ids;
 class bin{
 public:
     int num_nei;   //counter
-    std::vector<int> nei_id(9, 0);           //neighboring bins
+    std::vector<int> nei_id;           //neighboring bins
     std::vector<int> par_id;           //paricles in the bins
 
     bin(){
         num_nei = 0;
+        nei_id.resize(9, 0);
     }
 };                          //the bin that separate the zone
 
