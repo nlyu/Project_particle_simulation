@@ -15,14 +15,12 @@ int * bin_Ids;
 
 class bin{
 public:
-    int num_par, num_nei;   //counter
-    int * nei_id;           //neighboring bins
-    int * par_id;           //paricles in the bins
+    int num_nei;   //counter
+    vector<int> nei_id(9, 0);           //neighboring bins
+    vector<int> par_id;           //paricles in the bins
 
     bin(){
-        num_nei = num_par = 0;
-        nei_id = new int[9];
-        par_id = new int[particle_num];
+        num_nei = 0;
     }
 };                          //the bin that separate the zone
 
@@ -59,15 +57,13 @@ void binning(bin * bins){
     int i, id, idx;
     //clear particle counter
     for(i = 0; i < num_bins; ++i){
-        bins[i].num_par = 0;
+        bins[i].par_id.clear();
     }
 
     //set particles into bin
     for(i = 0; i < particle_num; ++i){
         id = bin_Ids[i];
-        idx = bins[id].num_par;
-        bins[id].par_id[idx] = i;
-        bins[id].num_par++;
+        bins[id].par_id.push_back(i);
     }
     return;
 }
@@ -81,12 +77,12 @@ void apply_force_bin(particle_t * _particles, bin * bins, int i, double * dmin, 
     int k, j, par_cur, par_nei;
 
     //for all particles in this bin
-    for(i = 0; i < cur_bin->num_par; ++i){
+    for(i = 0; i < cur_bin->par_id.size(); ++i){
         //look the neighbor around including itself
         for(k = 0; k < cur_bin->num_nei; ++k){
             new_bin = bins + cur_bin->nei_id[k];
             //for all particle in the neighbor bin
-            for(j = 0; j < new_bin->num_par; ++j){
+            for(j = 0; j < new_bin->par_id.size(); ++j){
                 par_cur = cur_bin->par_id[i];
                 par_nei = new_bin->par_id[j];
                 apply_force(_particles[par_cur],
