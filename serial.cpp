@@ -17,8 +17,8 @@ int * bin_Ids;
 class bin{
 public:
     int num_nei;   //counter
-    vector<int> nei_id(9, 0);           //neighboring bins
-    vector<int> par_id;           //paricles in the bins
+    std::vector<int> nei_id(9, 0);           //neighboring bins
+    std::vector<int> par_id;           //paricles in the bins
 
     bin(){
         num_nei = 0;

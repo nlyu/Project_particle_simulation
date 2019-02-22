@@ -24,11 +24,6 @@ typedef struct
 } particle_t;
 
 //
-//std
-//
-using std::vector;
-
-//
 //  timing routines
 //
 double read_timer( );
