@@ -20,9 +20,8 @@ public:
     std::vector<int> nei_id;           //neighboring bins
     std::vector<int> par_id;           //paricles in the bins
 
-    bin(){
+    bin(): nei_id(9, 0){
         num_nei = 0;
-        nei_id.resize(9, 0);
     }
 };                          //the bin that separate the zone
 
