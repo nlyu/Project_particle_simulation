@@ -168,6 +168,9 @@ int main( int argc, char **argv )
     init_bins(bins);
     //if( rank == 0 )
     init_particles( n, particles );
+    printf("We have particle: %d\n", particle_num);
+
+    return 0;
     // for(int i = 0; i < particle_num; ++i){
     //     move(particles[i]);
     //     particles[i].ax = particles[i].ay = 0;
