@@ -97,7 +97,7 @@ int main( int argc, char **argv )
 {
     int navg, nabsavg=0;
     double dmin, absmin=1.0,davg,absavg=0.0;
-    doubgle rdavg,rdmin;
+    double rdavg,rdmin;
     int rnavg;
 
     //
