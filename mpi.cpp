@@ -221,7 +221,9 @@ int main( int argc, char **argv )
         for( int i = 0; i < nlocal; i++ )
         {
             local[i].ax = local[i].ay = 0;
-            apply_force_bin(local[i], bins, i, particles, &dmin, &davg, &navg );
+            for (int j = 0; j < n; j++ )
+                apply_force( local[i], particles[j], &dmin, &davg, &navg );
+            // apply_force_bin(local[i], bins, i, particles, &dmin, &davg, &navg );
         }
 
         if( find_option( argc, argv, "-no" ) == -1 )
