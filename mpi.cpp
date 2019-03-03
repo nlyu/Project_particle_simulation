@@ -91,7 +91,7 @@ void apply_force_bin(particle_t & local, bin * bins, int id, particle_t * _parti
 }
 
 int main( int argc, char **argv )
-{    
+{
     int navg, nabsavg=0;
     double dmin, absmin=1.0,davg,absavg=0.0;
     double rdavg,rdmin;
@@ -158,7 +158,7 @@ int main( int argc, char **argv )
     //  initialize and distribute the particles (that's fine to leave it unoptimized)
     //
     set_size( n );
-    if( rank == 0 )
+    //if( rank == 0 )
         init_particles( n, particles );
     MPI_Scatterv( particles, partition_sizes, partition_offsets, PARTICLE, local, nlocal, PARTICLE, 0, MPI_COMM_WORLD );
 
