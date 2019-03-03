@@ -112,6 +112,7 @@ int main( int argc, char **argv )
     }
 
     int n = read_int( argc, argv, "-n", 1000 );
+    particle_num = n;
     char *savename = read_string( argc, argv, "-o", NULL );
     char *sumname = read_string( argc, argv, "-s", NULL );
 
@@ -158,8 +159,23 @@ int main( int argc, char **argv )
     //  initialize and distribute the particles (that's fine to leave it unoptimized)
     //
     set_size( n );
+    //initialize of global var and bin
+    bin_size = (int) ceil(sqrt(density * particle_num) / cutoff);
+    num_bins = bin_size * bin_size;
+    bin_Ids =  new int[particle_num];
+    bin * bins = new bin[num_bins];
+
+    init_bins(bins);
     //if( rank == 0 )
-        init_particles( n, particles );
+    init_particles( n, particles );
+    for(int i = 0; i < particle_num; ++i){
+        move(particles[i]);
+        particles[i].ax = particles[i].ay = 0;
+        bin_Ids[i] = PARICLE_BIN(particles[i]);
+    }
+
+    binning(bins);
+
     MPI_Scatterv( particles, partition_sizes, partition_offsets, PARTICLE, local, nlocal, PARTICLE, 0, MPI_COMM_WORLD );
 
     //
