@@ -200,11 +200,11 @@ int main( int argc, char **argv )
           if( fsave && (step%SAVEFREQ) == 0 )
             save( fsave, n, particles );
 
-        for(int i = 0; i < particle_num; ++i){
-            bin_Ids[i] = PARICLE_BIN(particles[i]);
-        }
-
-        binning(bins);
+        // for(int i = 0; i < particle_num; ++i){
+        //     bin_Ids[i] = PARICLE_BIN(particles[i]);
+        // }
+        // 
+        // binning(bins);
         //
         //  compute all forces
         //
