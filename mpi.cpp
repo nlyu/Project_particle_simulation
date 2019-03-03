@@ -79,7 +79,7 @@ void apply_force_bin(particle_t & local, bin * bins, int id, particle_t * _parti
     int i, k, j, par_cur, par_nei;
     for(i = 0; i < cur_bin->num_nei; ++i){
         //for each neighbors including itself
-        new_bin = bins + cur_bin->nei_id[k];
+        new_bin = bins + cur_bin->nei_id[i];
         for(j = 0; j < new_bin->par_id.size(); ++j){
             par_nei = new_bin->par_id[j];
             apply_force(local,
