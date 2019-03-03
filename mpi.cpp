@@ -176,8 +176,10 @@ int main( int argc, char **argv )
         bin_Ids[i] = PARICLE_BIN(particles[i]);
     }
 
+    printf("ck2\n";
     MPI_Scatterv( particles, partition_sizes, partition_offsets, PARTICLE, local, nlocal, PARTICLE, 0, MPI_COMM_WORLD );
 
+    printf("start simulation\n");
     //
     //  simulate a number of time steps
     //
