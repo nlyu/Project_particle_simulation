@@ -7,15 +7,15 @@
 #SBATCH -o mpi32.%j.stdout
 #SBATCH -e mpi32.%j.error
 
-# srun -N 32 -n 32 ./mpi -n 4000 -o mpi.txt  # adjust -n here as well
-# srun -N 32 -n 16 ./mpi -n 4000 -o mpi.txt  # adjust -n here as well
-# srun -N 32 -n 8 ./mpi -n 4000 -o mpi.txt  # adjust -n here as well
-# srun -N 32 -n 4 ./mpi -n 4000 -o mpi.txt  # adjust -n here as well
-# srun -N 32 -n 2 ./mpi -n 4000 -o mpi.txt  # adjust -n here as well
-#
-# srun -N 32 -n 32 ./mpi -n 2000 -o mpi.txt  # adjust -n here as well
-# srun -N 32 -n 32 ./mpi -n 4000 -o mpi.txt  # adjust -n here as well
-# srun -N 32 -n 32 ./mpi -n 8000 -o mpi.txt  # adjust -n here as well
-# srun -N 32 -n 32 ./mpi -n 16000 -o mpi.txt  # adjust -n here as well
+srun -N 32 -n 32 ./mpi -n 4000 -o mpi.txt  # adjust -n here as well
+srun -N 32 -n 16 ./mpi -n 4000 -o mpi.txt  # adjust -n here as well
+srun -N 32 -n 8 ./mpi -n 4000 -o mpi.txt  # adjust -n here as well
+srun -N 32 -n 4 ./mpi -n 4000 -o mpi.txt  # adjust -n here as well
+srun -N 32 -n 2 ./mpi -n 4000 -o mpi.txt  # adjust -n here as well
 
-srun -N 32 -n 32 ./mpi -n 500 -o mpi.txt  # adjust -n here as well
+srun -N 32 -n 32 ./mpi -n 2000 -o mpi.txt  # adjust -n here as well
+srun -N 32 -n 32 ./mpi -n 4000 -o mpi.txt  # adjust -n here as well
+srun -N 32 -n 32 ./mpi -n 8000 -o mpi.txt  # adjust -n here as well
+srun -N 32 -n 32 ./mpi -n 16000 -o mpi.txt  # adjust -n here as well
+
+srun -N 32 -n 4 ./mpi -n 500 -o mpi.txt  # adjust -n here as well
