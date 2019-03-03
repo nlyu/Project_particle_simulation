@@ -170,12 +170,11 @@ int main( int argc, char **argv )
     init_particles( n, particles );
     printf("We have particle: %d\n", particle_num);
 
-    return 0;
-    // for(int i = 0; i < particle_num; ++i){
-    //     move(particles[i]);
-    //     particles[i].ax = particles[i].ay = 0;
-    //     bin_Ids[i] = PARICLE_BIN(particles[i]);
-    // }
+    for(int i = 0; i < particle_num; ++i){
+        move(particles[i]);
+        particles[i].ax = particles[i].ay = 0;
+        bin_Ids[i] = PARICLE_BIN(particles[i]);
+    }
 
     MPI_Scatterv( particles, partition_sizes, partition_offsets, PARTICLE, local, nlocal, PARTICLE, 0, MPI_COMM_WORLD );
 
