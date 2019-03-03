@@ -90,11 +90,8 @@ void apply_force_bin(particle_t & local, bin * bins, int id, particle_t * _parti
     return;
 }
 
-//
-//  benchmarking program
-//
 int main( int argc, char **argv )
-{
+{    
     int navg, nabsavg=0;
     double dmin, absmin=1.0,davg,absavg=0.0;
     double rdavg,rdmin;
@@ -115,7 +112,6 @@ int main( int argc, char **argv )
     }
 
     int n = read_int( argc, argv, "-n", 1000 );
-    particle_num = n;
     char *savename = read_string( argc, argv, "-o", NULL );
     char *sumname = read_string( argc, argv, "-s", NULL );
 
@@ -144,7 +140,7 @@ int main( int argc, char **argv )
     //  set up the data partitioning across processors
     //
     int particle_per_proc = (n + n_proc - 1) / n_proc;
-    int *partition_offsets = (int *) malloc( (n_proc+1) * sizeof(int) );
+    int *partition_offsets = (int*) malloc( (n_proc+1) * sizeof(int) );
     for( int i = 0; i < n_proc+1; i++ )
         partition_offsets[i] = min( i * particle_per_proc, n );
 
@@ -162,33 +158,10 @@ int main( int argc, char **argv )
     //  initialize and distribute the particles (that's fine to leave it unoptimized)
     //
     set_size( n );
-
-    //if( rank == 0 )
-    init_particles( n, particles );
-
-    //initialize of global var and bin
-    bin_size = (int) ceil(sqrt(density * particle_num) / cutoff);
-    num_bins = bin_size * bin_size;
-    bin_Ids =  new int[particle_num];
-    bin * bins = new bin[num_bins];
-
-    //initialize
-    init_bins(bins);
-    init_particles(particle_num, particles);
-
-    //allocate the position of particle to bins
-    for(int i = 0; i < particle_num; ++i){
-        move(particles[i]);
-        particles[i].ax = particles[i].ay = 0;
-        bin_Ids[i] = PARICLE_BIN(particles[i]);
-    }
-
-    //map the bins mack to particle
-    binning(bins);
-
+    if( rank == 0 )
+        init_particles( n, particles );
     MPI_Scatterv( particles, partition_sizes, partition_offsets, PARTICLE, local, nlocal, PARTICLE, 0, MPI_COMM_WORLD );
 
-    printf("end of initialization");
     //
     //  simulate a number of time steps
     //
@@ -202,11 +175,6 @@ int main( int argc, char **argv )
         //  collect all global data locally (not good idea to do)
         //
         MPI_Allgatherv( local, nlocal, PARTICLE, particles, partition_sizes, partition_offsets, PARTICLE, MPI_COMM_WORLD );
-        // for(int i = 0; i < particle_num; ++i){
-        //     bin_Ids[i] = PARICLE_BIN(particles[i]);
-        // }
-
-        // binning(bins);
 
         //
         //  save current step if necessary (slightly different semantics than in other codes)
@@ -222,8 +190,7 @@ int main( int argc, char **argv )
         {
             local[i].ax = local[i].ay = 0;
             for (int j = 0; j < n; j++ )
-                apply_force(local[i], particles[j], &dmin, &davg, &navg );
-            // apply_force_bin(local[i], bins, i, particles, &dmin, &davg, &navg );
+                apply_force( local[i], particles[j], &dmin, &davg, &navg );
         }
 
         if( find_option( argc, argv, "-no" ) == -1 )
@@ -249,9 +216,8 @@ int main( int argc, char **argv )
         //
         //  move particles
         //
-        for(int i = 0; i < nlocal; ++i){
-            move(local[i]);
-        }
+        for( int i = 0; i < nlocal; i++ )
+            move( local[i] );
     }
     simulation_time = read_timer( ) - simulation_time;
 
