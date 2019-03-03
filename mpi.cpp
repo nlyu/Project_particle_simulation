@@ -158,7 +158,7 @@ int main( int argc, char **argv )
     //
     //  initialize and distribute the particles (that's fine to leave it unoptimized)
     //
-    set_size( n );
+    set_size(n);
     //initialize of global var and bin
     bin_size = (int) ceil(sqrt(density * particle_num) / cutoff);
     num_bins = bin_size * bin_size;
@@ -168,13 +168,11 @@ int main( int argc, char **argv )
     init_bins(bins);
     //if( rank == 0 )
     init_particles( n, particles );
-    for(int i = 0; i < particle_num; ++i){
-        move(particles[i]);
-        particles[i].ax = particles[i].ay = 0;
-        bin_Ids[i] = PARICLE_BIN(particles[i]);
-    }
-
-    binning(bins);
+    // for(int i = 0; i < particle_num; ++i){
+    //     move(particles[i]);
+    //     particles[i].ax = particles[i].ay = 0;
+    //     bin_Ids[i] = PARICLE_BIN(particles[i]);
+    // }
 
     MPI_Scatterv( particles, partition_sizes, partition_offsets, PARTICLE, local, nlocal, PARTICLE, 0, MPI_COMM_WORLD );
 
