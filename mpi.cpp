@@ -193,7 +193,6 @@ int main( int argc, char **argv )
         //  collect all global data locally (not good idea to do)
         //
         MPI_Allgatherv( local, nlocal, PARTICLE, particles, partition_sizes, partition_offsets, PARTICLE, MPI_COMM_WORLD );
-
         //
         //  save current step if necessary (slightly different semantics than in other codes)
         //
@@ -201,6 +200,11 @@ int main( int argc, char **argv )
           if( fsave && (step%SAVEFREQ) == 0 )
             save( fsave, n, particles );
 
+        for(int i = 0; i < particle_num; ++i){
+            bin_Ids[i] = PARICLE_BIN(particles[i]);
+        }
+
+        binning(bins);
         //
         //  compute all forces
         //
