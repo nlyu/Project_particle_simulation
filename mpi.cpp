@@ -76,7 +76,7 @@ void binning(bin * bins){
 void apply_force_bin(particle_t & local, bin * bins, int id, particle_t * _particles, double * dmin, double * davg, int * navg){
     bin * cur_bin = bins + PARICLE_BIN(local);
     bin * new_bin;
-    int i, k, j, par_cur, par_nei;
+    int i, j, par_nei;
     for(i = 0; i < cur_bin->num_nei; ++i){
         //for each neighbors including itself
         new_bin = bins + cur_bin->nei_id[i];
@@ -163,6 +163,9 @@ int main( int argc, char **argv )
     //
     set_size( n );
 
+    //if( rank == 0 )
+    init_particles( n, particles );
+
     //initialize of global var and bin
     bin_size = (int) ceil(sqrt(density * particle_num) / cutoff);
     num_bins = bin_size * bin_size;
@@ -183,8 +186,6 @@ int main( int argc, char **argv )
     //map the bins mack to particle
     binning(bins);
 
-    if( rank == 0 )
-        init_particles( n, particles );
     MPI_Scatterv( particles, partition_sizes, partition_offsets, PARTICLE, local, nlocal, PARTICLE, 0, MPI_COMM_WORLD );
 
     //
