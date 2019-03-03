@@ -73,10 +73,11 @@ void binning(bin * bins){
 /*
   apply particle force in each bin
 */
-void apply_force_bin(particle_t & local, bin * bins, int id, particle_t * _particles, double * dmin, double * davg, int * navg){
+void apply_force_naive_mpi(particle_t & local, bin * bins, int id, particle_t * _particles, double * dmin, double * davg, int * navg){
     bin * cur_bin = bins + PARICLE_BIN(local);
     bin * new_bin;
     int i, j, par_nei;
+    //only for all the local particles
     for(i = 0; i < cur_bin->num_nei; ++i){
         //for each neighbors including itself
         new_bin = bins + cur_bin->nei_id[i];
@@ -200,20 +201,23 @@ int main( int argc, char **argv )
           if( fsave && (step%SAVEFREQ) == 0 )
             save( fsave, n, particles );
 
-        // for(int i = 0; i < particle_num; ++i){
-        //     bin_Ids[i] = PARICLE_BIN(particles[i]);
-        // }
-        // 
-        // binning(bins);
-        //
-        //  compute all forces
-        //
+        for(int i = 0; i < particle_num; ++i){
+            bin_Ids[i] = PARICLE_BIN(particles[i]);
+        }
+
+        binning(bins);
+
+        // compute all forces
+
         for( int i = 0; i < nlocal; i++ )
         {
             local[i].ax = local[i].ay = 0;
-            for (int j = 0; j < n; j++ )
-                apply_force( local[i], particles[j], &dmin, &davg, &navg );
-            //apply_force_bin(local[i], bins, i, particles, &dmin, &davg, &navg);
+            // n^2 解
+            // for (int j = 0; j < n; j++ )
+            //     apply_force( local[i], particles[j], &dmin, &davg, &navg );
+
+            // n*p 解
+            apply_force_bin_naive_mpi(local[i], bins, i, particles, &dmin, &davg, &navg);
         }
 
         if( find_option( argc, argv, "-no" ) == -1 )
