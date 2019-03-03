@@ -188,6 +188,7 @@ int main( int argc, char **argv )
 
     MPI_Scatterv( particles, partition_sizes, partition_offsets, PARTICLE, local, nlocal, PARTICLE, 0, MPI_COMM_WORLD );
 
+    printf("end of initialization");
     //
     //  simulate a number of time steps
     //
@@ -246,7 +247,7 @@ int main( int argc, char **argv )
         //
         //  move particles
         //
-        for(int i = 0; i < nlocal; i++){
+        for(int i = 0; i < nlocal; ++i){
             move(local[i]);
         }
     }
