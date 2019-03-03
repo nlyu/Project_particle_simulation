@@ -179,7 +179,7 @@ int main( int argc, char **argv )
     // printf("ck2\n");
     MPI_Scatterv( particles, partition_sizes, partition_offsets, PARTICLE, local, nlocal, PARTICLE, 0, MPI_COMM_WORLD );
 
-    printf("start simulation\n");
+    // printf("start simulation\n");
     //
     //  simulate a number of time steps
     //
