@@ -202,11 +202,11 @@ int main( int argc, char **argv )
         //  collect all global data locally (not good idea to do)
         //
         MPI_Allgatherv( local, nlocal, PARTICLE, particles, partition_sizes, partition_offsets, PARTICLE, MPI_COMM_WORLD );
-        for(int i = 0; i < particle_num; ++i){
-            bin_Ids[i] = PARICLE_BIN(particles[i]);
-        }
+        // for(int i = 0; i < particle_num; ++i){
+        //     bin_Ids[i] = PARICLE_BIN(particles[i]);
+        // }
 
-        binning(bins);
+        // binning(bins);
 
         //
         //  save current step if necessary (slightly different semantics than in other codes)
@@ -222,7 +222,7 @@ int main( int argc, char **argv )
         {
             local[i].ax = local[i].ay = 0;
             for (int j = 0; j < n; j++ )
-                apply_force( local[i], particles[j], &dmin, &davg, &navg );
+                apply_force(local[i], particles[j], &dmin, &davg, &navg );
             // apply_force_bin(local[i], bins, i, particles, &dmin, &davg, &navg );
         }
 
