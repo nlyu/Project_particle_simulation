@@ -58,15 +58,6 @@ bool operator<(const imy_particle_t &a, const imy_particle_t &b) {
     return a.index < b.index;
 }
 
-void init_bins(int n, double size, imy_particle_t *particles, std::vector<bin_t> &bins) {
-    // Create bins (most do not belong to this task)
-    for (int b_idx = 0; b_idx < n_bins; b_idx++) {
-        bin_t b;
-        bins.push_back(b);
-    }
-    assign_particles_to_bins(n, size, particles, bins);
-}
-
 //
 //  I/O routines
 //
@@ -199,6 +190,15 @@ void assign_particles_to_bins(int n, double size, imy_particle_t *particles, std
         int b_idx = particles[k].particle.bin_idx = bin_of_particle(size, particles[k]);
         bins[b_idx].particles.push_back(&particles[k]);
     }
+}
+
+void init_bins(int n, double size, imy_particle_t *particles, std::vector<bin_t> &bins) {
+    // Create bins (most do not belong to this task)
+    for (int b_idx = 0; b_idx < n_bins; b_idx++) {
+        bin_t b;
+        bins.push_back(b);
+    }
+    assign_particles_to_bins(n, size, particles, bins);
 }
 
 int rank_of_bin(int b_idx) {
