@@ -18,6 +18,24 @@
 
 MPI_Datatype PARTICLE;
 
+typedef struct
+{
+  int bin_idx;
+  double x;
+  double y;
+  double vx;
+  double vy;
+  double ax;
+  double ay;
+} my_particle_t;
+
+// Indexed particle
+typedef struct {
+    my_particle_t particle;
+    int index;
+} imy_particle_t;
+
+
 typedef struct bin_t {
     std::list<imy_particle_t*> particles;
     std::list<imy_particle_t*> incoming;
