@@ -542,7 +542,6 @@ int main(int argc, char **argv)
         //
         if (find_option(argc, argv, "-no") == -1) {
             if (savename && (step % SAVEFREQ) == 0) {
-                D(printf("rank %d: Gathering particle counts...\n", rank));
                 int *local_particle_counts = 0;
                 if (rank == 0) {
                     local_particle_counts = new int[n_proc];
