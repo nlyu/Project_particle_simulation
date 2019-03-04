@@ -7,15 +7,10 @@
 #include <cmath>
 #include <time.h>
 #include <algorithm>
-//#include <stdlib.h>
-//#include <stdio.h>
-//#include <assert.h>
 #include <float.h>
 #include <string.h>
 #include <math.h>
-//#include <time.h>
 #include <sys/time.h>
-//#include "common.h"
 
 #ifdef DEBUG
 #define D(x) x
@@ -59,7 +54,6 @@ double read_timer2( );
 //
 //  simulation routines
 //
-void set_size2( int n );
 void init_particles2( int n, my_particle_t *p );
 void apply_force2( my_particle_t &particle, my_particle_t &neighbor , double *dmin, double *davg, int *navg);
 void move2( my_particle_t &p );
@@ -80,7 +74,6 @@ char *read_string2( int argc, char **argv, const char *option, char *default_val
 
 #endif
 double size2;
-//  tuned constants
 #define density 0.0005
 #define mass    0.01
 #define cutoff  0.01
@@ -100,11 +93,8 @@ double read_timer2( )
     gettimeofday( &end, NULL );
     return (end.tv_sec - start.tv_sec) + 1.0e-6 * (end.tv_usec - start.tv_usec);
 }
-//  keep density constant
-void set_size2( int n )
-{
-    size2 = sqrt( density * n );
-}
+
+
 //  Initialize the particle positions and velocities
 void init_particles2( int n, my_particle_t *p )
 {
@@ -157,8 +147,6 @@ void apply_force2( my_particle_t &particle, my_particle_t &neighbor , double *dm
 
     r2 = fmax( r2, min_r*min_r );
     double r = sqrt( r2 );
-
-
 
     //
     //  very simple short-range repulsive force
@@ -246,19 +234,6 @@ int n;
 int rows_per_proc;
 
 MPI_Datatype PARTICLE;
-
-/*
-typedef struct
-{
-  double x;
-  double y;
-  double vx;
-  double vy;
-  double ax;
-  double ay;
-  int bin_idx;
-} my_particle_t;
-*/
 
 // Indexed particle
 typedef struct {
@@ -454,7 +429,7 @@ void exchange_moved(double size, imy_particle_t **local_particles_ptr,
     for (std::vector<int>::const_iterator b_it = local_bin_idxs.begin();
          b_it != local_bin_idxs.end(); b_it++) {
         for (std::list<imy_particle_t*>::const_iterator p_it = bins[*b_it].particles.begin();
-             p_it != bins[*b_it].particles.end(); p_it++) {
+            p_it != bins[*b_it].particles.end(); p_it++) {
             assert(cur_pos < new_local_particles + n);
             *cur_pos = **p_it;
             cur_pos++;
@@ -481,11 +456,16 @@ void init_my_particle_type() {
     MPI_Aint disp[5];
     MPI_Datatype typs[5];
     MPI_Datatype temp;
-    lens[0] = 1; disp[0] = imy_particle_t_particle_offset(x); typs[0] = MPI_DOUBLE;
-    lens[1] = 1; disp[1] = imy_particle_t_particle_offset(y); typs[1] = MPI_DOUBLE;
-    lens[2] = 1; disp[2] = imy_particle_t_particle_offset(vx); typs[2] = MPI_DOUBLE;
-    lens[3] = 1; disp[3] = imy_particle_t_particle_offset(vy); typs[3] = MPI_DOUBLE;
-    lens[4] = 1; disp[4] = imy_particle_t_offset(index); typs[4] = MPI_INT;
+    lens[0] = 1;
+    disp[0] = imy_particle_t_particle_offset(x); typs[0] = MPI_DOUBLE;
+    lens[1] = 1;
+    disp[1] = imy_particle_t_particle_offset(y); typs[1] = MPI_DOUBLE;
+    lens[2] = 1;
+    disp[2] = imy_particle_t_particle_offset(vx); typs[2] = MPI_DOUBLE;
+    lens[3] = 1;
+    disp[3] = imy_particle_t_particle_offset(vy); typs[3] = MPI_DOUBLE;
+    lens[4] = 1;
+    disp[4] = imy_particle_t_offset(index); typs[4] = MPI_INT;
     MPI_Type_create_struct(5, lens, disp, typs, &temp);
     MPI_Type_create_resized(temp, 0, sizeof(imy_particle_t), &PARTICLE);
     MPI_Type_commit(&PARTICLE);
@@ -565,14 +545,18 @@ int main(int argc, char **argv)
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &n_proc);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
     imy_particle_t *mpi_buffer = new imy_particle_t[3 * n];
     MPI_Buffer_attach(mpi_buffer, 10 * n * sizeof(imy_particle_t));
+
     // Allocate generic resources
     FILE *fsave = savename && rank == 0 ? fopen(savename, "w") : NULL;
     FILE *fsum = sumname && rank == 0 ? fopen (sumname, "a") : NULL;
+
     // Initialize and bin particles
     imy_particle_t *particles = (imy_particle_t*) malloc(n * sizeof(imy_particle_t));
-    set_size2(n);
+    size2 = sqrt(density * n);
+
     double size = sqrt(0.0005 * n);
     bins_per_side = read_int2(argc, argv, "-b", max(1, sqrt(0.0005 * n) / (0.01 * 3)));
     D(printf("%d bins per side\n", bins_per_side));
@@ -606,7 +590,7 @@ int main(int argc, char **argv)
         exchange_neighbors(size, local_particles, &n_local_particles, bins);
 
         // Zero out the accelerations
-        for (int i = 0; i < n_local_particles; i++) {
+        for (int i = 0; i < n_local_particles; ++i) {
             local_particles[i].particle.ax = local_particles[i].particle.ay = 0;
         }
 

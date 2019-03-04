@@ -152,7 +152,7 @@ int main( int argc, char **argv )
         bin_Ids[i] = PARICLE_BIN(particles[i]);
     }
 
-    printf("bins size: %d\n", num_bins);
+    //printf("bins size: %d\n", num_bins);
 
     //map the bins mack to particle
     omp_lock_t * locks = new omp_lock_t[num_bins];
