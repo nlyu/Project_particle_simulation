@@ -227,7 +227,7 @@ void save2( FILE *f, int n, my_particle_t *p )
     static bool first = true;
     if( first )
     {
-        fprintf( f, "%d %g\n", n, size2 );
+        fprintf( f, "%d %g\n", n, size );
         first = false;
     }
     for( int i = 0; i < n; i++ )
@@ -248,14 +248,14 @@ void move_mpi( my_particle_t &p )
     //
     //  bounce from walls
     //
-    while( p.x < 0 || p.x > size2 )
+    while( p.x < 0 || p.x > size )
     {
-        p.x  = p.x < 0 ? -p.x : 2*size2-p.x;
+        p.x  = p.x < 0 ? -p.x : 2*size -p.x;
         p.vx = -p.vx;
     }
-    while( p.y < 0 || p.y > size2 )
+    while( p.y < 0 || p.y > size )
     {
-        p.y  = p.y < 0 ? -p.y : 2*size2-p.y;
+        p.y  = p.y < 0 ? -p.y : 2*size-p.y;
         p.vy = -p.vy;
     }
 }
