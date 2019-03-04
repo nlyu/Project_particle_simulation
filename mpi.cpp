@@ -11,24 +11,14 @@
 #include <string.h>
 #include <math.h>
 #include <sys/time.h>
+#include "common.h"
+
 
 #ifdef DEBUG
 #define D(x) x
 #else
 #define D(x)
 #endif
-
-#ifndef __CS267_COMMON_H__
-#define __CS267_COMMON_H__
-
-inline int min( int a, int b ) { return a < b ? a : b; }
-inline int max( int a, int b ) { return a > b ? a : b; }
-
-//
-//  saving parameters
-//
-const int NSTEPS = 1000;
-const int SAVEFREQ = 10;
 
 typedef struct bin_t bin_t;
 
@@ -46,186 +36,13 @@ typedef struct
   int bin_idx;
 } my_particle_t;
 
-//
-//  timing routines
-//
-double read_timer2( );
 
-//
-//  simulation routines
-//
-void init_particles2( int n, my_particle_t *p );
-void apply_force2( my_particle_t &particle, my_particle_t &neighbor , double *dmin, double *davg, int *navg);
-void move2( my_particle_t &p );
-
-
-//
-//  I/O routines
-//
-FILE *open_save2( char *filename, int n );
-void save2( FILE *f, int n, my_particle_t *p );
-
-//
-//  argument processing routines
-//
-int find_option2( int argc, char **argv, const char *option );
-int read_int2( int argc, char **argv, const char *option, int default_value );
-char *read_string2( int argc, char **argv, const char *option, char *default_value );
-
-#endif
 double size2;
 #define density 0.0005
 #define mass    0.01
 #define cutoff  0.01
 #define min_r   (cutoff/100)
 #define dt      0.0005
-//  timer
-double read_timer2( )
-{
-    static bool initialized = false;
-    static struct timeval start;
-    struct timeval end;
-    if( !initialized )
-    {
-        gettimeofday( &start, NULL );
-        initialized = true;
-    }
-    gettimeofday( &end, NULL );
-    return (end.tv_sec - start.tv_sec) + 1.0e-6 * (end.tv_usec - start.tv_usec);
-}
-
-
-//  Initialize the particle positions and velocities
-void init_particles2( int n, my_particle_t *p )
-{
-    srand48( time( NULL ) );
-    int sx = (int)ceil(sqrt((double)n));
-    int sy = (n+sx-1)/sx;
-    int *shuffle = (int*)malloc( n * sizeof(int) );
-    for( int i = 0; i < n; i++ )
-        shuffle[i] = i;
-    for( int i = 0; i < n; i++ )
-    {
-        //  make sure particles are not spatially sorted
-        int j = lrand48()%(n-i);
-        int k = shuffle[j];
-        shuffle[j] = shuffle[n-i-1];
-
-        //
-        //  distribute particles evenly to ensure proper spacing
-        //
-        p[i].x = size2*(1.+(k%sx))/(1+sx);
-        p[i].y = size2*(1.+(k/sx))/(1+sy);
-
-        //
-        //  assign random velocities within a bound
-        //
-        p[i].vx = drand48()*2-1;
-        p[i].vy = drand48()*2-1;
-    }
-    free( shuffle );
-}
-
-//
-//  interact two particles
-//
-void apply_force2( my_particle_t &particle, my_particle_t &neighbor , double *dmin, double *davg, int *navg)
-{
-
-    double dx = neighbor.x - particle.x;
-    double dy = neighbor.y - particle.y;
-    double r2 = dx * dx + dy * dy;
-    if( r2 > cutoff*cutoff )
-        return;
-	if (r2 != 0)
-        {
-	   if (r2/(cutoff*cutoff) < *dmin * (*dmin))
-	      *dmin = sqrt(r2)/cutoff;
-           (*davg) += sqrt(r2)/cutoff;
-           (*navg) ++;
-        }
-
-    r2 = fmax( r2, min_r*min_r );
-    double r = sqrt( r2 );
-
-    //
-    //  very simple short-range repulsive force
-    //
-    double coef = ( 1 - cutoff / r ) / r2 / mass;
-    particle.ax += coef * dx;
-    particle.ay += coef * dy;
-}
-
-//
-//  integrate the ODE
-//
-void move2( my_particle_t &p )
-{
-    //
-    //  slightly simplified Velocity Verlet integration
-    //  conserves energy better than explicit Euler method
-    //
-    p.vx += p.ax * dt;
-    p.vy += p.ay * dt;
-    p.x  += p.vx * dt;
-    p.y  += p.vy * dt;
-
-    //
-    //  bounce from walls
-    //
-    while( p.x < 0 || p.x > size2 )
-    {
-        p.x  = p.x < 0 ? -p.x : 2*size2-p.x;
-        p.vx = -p.vx;
-    }
-    while( p.y < 0 || p.y > size2 )
-    {
-        p.y  = p.y < 0 ? -p.y : 2*size2-p.y;
-        p.vy = -p.vy;
-    }
-}
-
-//
-//  I/O routines
-//
-void save2( FILE *f, int n, my_particle_t *p )
-{
-    static bool first = true;
-    if( first )
-    {
-        fprintf( f, "%d %g\n", n, size2 );
-        first = false;
-    }
-    for( int i = 0; i < n; i++ )
-        fprintf( f, "%g %g\n", p[i].x, p[i].y );
-}
-
-//
-//  command line option processing
-//
-int find_option2( int argc, char **argv, const char *option )
-{
-    for( int i = 1; i < argc; i++ )
-        if( strcmp( argv[i], option ) == 0 )
-            return i;
-    return -1;
-}
-
-int read_int2( int argc, char **argv, const char *option, int default_value )
-{
-    int iplace = find_option2( argc, argv, option );
-    if( iplace >= 0 && iplace < argc-1 )
-        return atoi( argv[iplace+1] );
-    return default_value;
-}
-
-char *read_string2( int argc, char **argv, const char *option, char *default_value )
-{
-    int iplace = find_option2( argc, argv, option );
-    if( iplace >= 0 && iplace < argc-1 )
-        return argv[iplace+1];
-    return default_value;
-}
 
 int bins_per_side;
 int n_bins;
@@ -526,7 +343,7 @@ int main(int argc, char **argv)
     int rnavg;
 
     // Process command line parameters
-    if (find_option2(argc, argv, "-h") >= 0)
+    if (find_option(argc, argv, "-h") >= 0)
     {
         printf("Options:\n");
         printf("-h to see this help\n");
@@ -537,9 +354,9 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    n = read_int2(argc, argv, "-n", 1000);
-    char *savename = read_string2(argc, argv, "-o", NULL);
-    char *sumname = read_string2(argc, argv, "-s", NULL);
+    n = read_int(argc, argv, "-n", 1000);
+    char *savename = read_string(argc, argv, "-o", NULL);
+    char *sumname = read_string(argc, argv, "-s", NULL);
 
     // Set up MPI
     MPI_Init(&argc, &argv);
@@ -558,7 +375,7 @@ int main(int argc, char **argv)
     size2 = sqrt(density * n);
 
     double size = sqrt(0.0005 * n);
-    bins_per_side = read_int2(argc, argv, "-b", max(1, sqrt(0.0005 * n) / (0.01 * 3)));
+    bins_per_side = read_int(argc, argv, "-b", max(1, sqrt(0.0005 * n) / (0.01 * 3)));
     D(printf("%d bins per side\n", bins_per_side));
     n_bins = bins_per_side * bins_per_side;
     rows_per_proc = ceil(bins_per_side / (float)n_proc);
@@ -579,7 +396,7 @@ int main(int argc, char **argv)
     //
     //  simulate a number of time steps
     //
-    double simulation_time = read_timer2();
+    double simulation_time = read_timer();
     for (int step = 0; step < NSTEPS; step++)
     {
         navg = 0;
@@ -614,14 +431,14 @@ int main(int argc, char **argv)
                          it1 != bins[b1].particles.end(); it1++) {
                         for (std::list<imy_particle_t*>::const_iterator it2 = bins[b2].particles.begin();
                              it2 != bins[b2].particles.end(); it2++) {
-                            apply_force2((*it1)->particle, (*it2)->particle, &dmin, &davg, &navg);
+                            apply_force((*it1)->particle, (*it2)->particle, &dmin, &davg, &navg);
                         }
                     }
                 }
             }
         }
 
-        if (find_option2(argc, argv, "-no") == -1) {
+        if (find_option(argc, argv, "-no") == -1) {
             MPI_Reduce(&davg,&rdavg,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
             MPI_Reduce(&navg,&rnavg,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
             MPI_Reduce(&dmin,&rdmin,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
@@ -647,7 +464,7 @@ int main(int argc, char **argv)
             std::list<imy_particle_t*>::iterator it = bins[b].particles.begin();
             while (it != bins[b].particles.end()) {
                 imy_particle_t *p = *it;
-                move2(p->particle);
+                move(p->particle);
                 int new_b_idx = bin_of_particle(size, *p);
                 if (new_b_idx != b) {
                     bin_t *new_bin = &bins[new_b_idx];
@@ -672,7 +489,7 @@ int main(int argc, char **argv)
         //
         //  save current step if necessary
         //
-        if (find_option2(argc, argv, "-no") == -1) {
+        if (find_option(argc, argv, "-no") == -1) {
             if (savename && (step % SAVEFREQ) == 0) {
                 D(printf("rank %d: Gathering particle counts...\n", rank));
                 int *local_particle_counts = 0;
@@ -700,19 +517,19 @@ int main(int argc, char **argv)
                         particles_for_save[i].x = particles[i].particle.x;
                         particles_for_save[i].y = particles[i].particle.y;
                     }
-                    save2(fsave, n, particles_for_save);
+                    save(fsave, n, particles_for_save);
                     delete[] particles_for_save;
                     delete[] local_particle_counts;
                 }
             }
         }
     }
-    simulation_time = read_timer2() - simulation_time;
+    simulation_time = read_timer() - simulation_time;
 
     if (rank == 0) {
         printf("n = %d, simulation time = %g seconds", n, simulation_time);
 
-        if (find_option2(argc, argv, "-no") == -1) {
+        if (find_option(argc, argv, "-no") == -1) {
             if (nabsavg) absavg /= nabsavg;
             //
             //  -the minimum distance absmin between 2 particles during the run of the simulation
