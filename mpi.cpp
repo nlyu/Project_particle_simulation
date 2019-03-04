@@ -73,7 +73,7 @@ void binning(bin * bins){
 /*
   apply particle force in each bin
 */
-void apply_force_naive_mpi(particle_t & local, bin * bins, int id, particle_t * _particles, double * dmin, double * davg, int * navg){
+void apply_force_bin_naive_mpi(particle_t & local, bin * bins, int id, particle_t * _particles, double * dmin, double * davg, int * navg){
     bin * cur_bin = bins + PARICLE_BIN(local);
     bin * new_bin;
     int i, j, par_nei;
