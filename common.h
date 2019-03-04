@@ -23,23 +23,6 @@ typedef struct
   double ay;
 } particle_t;
 
-typedef struct
-{
-  int bin_idx;
-  double x;
-  double y;
-  double vx;
-  double vy;
-  double ax;
-  double ay;
-} my_particle_t;
-
-// Indexed particle
-typedef struct {
-    my_particle_t particle;
-    int index;
-} imy_particle_t;
-
 //
 //  timing routines
 //
