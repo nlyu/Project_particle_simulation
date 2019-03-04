@@ -278,7 +278,7 @@ void exchange_moved(double size, imy_particle_t **local_particles_ptr,
             }
         }
         MPI_Request request;
-        if(border_particles.empty()){
+        if(moved_particles.empty()){
             MPI_Ibsend(0, moved_particles.size(), PARTICLE, neighbor_ranks[i], 0, MPI_COMM_WORLD, &request);
         } else {
             MPI_Ibsend(&moved_particles[0], moved_particles.size(), PARTICLE, neighbor_ranks[i], 0, MPI_COMM_WORLD, &request);
