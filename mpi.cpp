@@ -301,7 +301,7 @@ void exchange_moved(double size, imy_particle_t **local_particles_ptr,
     for(auto &b_it: local_bin_idxs){
         for(auto &p_it: bins[b_it].particles){
         //for (std::list<imy_particle_t*>::const_iterator p_it = bins[ *b_it].particles.begin(); p_it != bins[*b_it].particles.end(); p_it++) {
-            *cur_pos = **p_it;
+            *cur_pos = *p_it;
             cur_pos++;
         }
     }
