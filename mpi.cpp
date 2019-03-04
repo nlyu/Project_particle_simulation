@@ -271,9 +271,9 @@ void exchange_moved(double size, imy_particle_t **local_particles_ptr,
         std::vector<imy_particle_t> moved_particles;
         for (int b_idx = 0; b_idx < n_bins; b_idx++) {
             if (rank_of_bin(b_idx) == neighbor_ranks[i]) {
-                for (std::list<imy_particle_t *>::const_iterator p_it = bins[b_idx].incoming.begin();
-                     p_it != bins[b_idx].incoming.end(); p_it++) {
-                    moved_particles.push_back(**p_it);
+                //for (std::list<imy_particle_t *>::const_iterator p_it = bins[b_idx].incoming.begin(); p_it != bins[b_idx].incoming.end(); p_it++) {
+                for(auto &it: bins[b_idx].incoming){
+                    moved_particles.push_back(*p_it);
                 }
             }
         }
