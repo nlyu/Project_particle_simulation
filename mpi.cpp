@@ -70,6 +70,78 @@ struct bin_t {
 int rank_of_bin(int b_idx);
 void init_bins(int n, double size, imy_particle_t *particles, std::vector<bin_t> &bins);
 
+//
+//  I/O routines
+//
+void save2( FILE *f, int n, my_particle_t *p )
+{
+    static bool first = true;
+    if( first )
+    {
+        fprintf( f, "%d %g\n", n, size2 );
+        first = false;
+    }
+    for( int i = 0; i < n; i++ )
+        fprintf( f, "%g %g\n", p[i].x, p[i].y );
+}
+
+void move2( my_particle_t &p )
+{
+    //
+    //  slightly simplified Velocity Verlet integration
+    //  conserves energy better than explicit Euler method
+    //
+    p.vx += p.ax * dt;
+    p.vy += p.ay * dt;
+    p.x  += p.vx * dt;
+    p.y  += p.vy * dt;
+
+    //
+    //  bounce from walls
+    //
+    while( p.x < 0 || p.x > size2 )
+    {
+        p.x  = p.x < 0 ? -p.x : 2*size2-p.x;
+        p.vx = -p.vx;
+    }
+    while( p.y < 0 || p.y > size2 )
+    {
+        p.y  = p.y < 0 ? -p.y : 2*size2-p.y;
+        p.vy = -p.vy;
+    }
+}
+
+
+void apply_force2( my_particle_t &particle, my_particle_t &neighbor , double *dmin, double *davg, int *navg)
+{
+
+    double dx = neighbor.x - particle.x;
+    double dy = neighbor.y - particle.y;
+    double r2 = dx * dx + dy * dy;
+    if( r2 > cutoff*cutoff )
+        return;
+	if (r2 != 0)
+        {
+	   if (r2/(cutoff*cutoff) < *dmin * (*dmin))
+	      *dmin = sqrt(r2)/cutoff;
+           (*davg) += sqrt(r2)/cutoff;
+           (*navg) ++;
+        }
+
+    r2 = fmax( r2, min_r*min_r );
+    double r = sqrt( r2 );
+
+
+
+    //
+    //  very simple short-range repulsive force
+    //
+    double coef = ( 1 - cutoff / r ) / r2 / mass;
+    particle.ax += coef * dx;
+    particle.ay += coef * dy;
+}
+
+
 void init_iparticles(int n, double size, imy_particle_t *p) {
     srand48( time( NULL ) );
 
@@ -431,7 +503,7 @@ int main(int argc, char **argv)
                          it1 != bins[b1].particles.end(); it1++) {
                         for (std::list<imy_particle_t*>::const_iterator it2 = bins[b2].particles.begin();
                              it2 != bins[b2].particles.end(); it2++) {
-                            apply_force((*it1)->particle, (*it2)->particle, &dmin, &davg, &navg);
+                            apply_force2((*it1)->particle, (*it2)->particle, &dmin, &davg, &navg);
                         }
                     }
                 }
@@ -464,7 +536,7 @@ int main(int argc, char **argv)
             std::list<imy_particle_t*>::iterator it = bins[b].particles.begin();
             while (it != bins[b].particles.end()) {
                 imy_particle_t *p = *it;
-                move(p->particle);
+                move2(p->particle);
                 int new_b_idx = bin_of_particle(size, *p);
                 if (new_b_idx != b) {
                     bin_t *new_bin = &bins[new_b_idx];
@@ -517,7 +589,7 @@ int main(int argc, char **argv)
                         particles_for_save[i].x = particles[i].particle.x;
                         particles_for_save[i].y = particles[i].particle.y;
                     }
-                    save(fsave, n, particles_for_save);
+                    save2(fsave, n, particles_for_save);
                     delete[] particles_for_save;
                     delete[] local_particle_counts;
                 }
