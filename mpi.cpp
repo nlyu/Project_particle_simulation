@@ -6,6 +6,7 @@
 #include <cmath>
 #include <algorithm>
 #include <float.h>
+#include <time.h>
 #include <string.h>
 #include <math.h>
 #include "common.h"
