@@ -404,8 +404,8 @@ int main(int argc, char **argv)
     int lens[5];
     int n_local_particles;
     int particle_size;
-    int counter = 0;
-    int cur_displs = 0;
+    int counter;
+    int cur_displs;
     int sendcnt;
     int sendcnts[n_proc];
     int displs[n_proc];
@@ -431,7 +431,7 @@ int main(int argc, char **argv)
     //scatter the paritcles to each processors
 
     imy_particle_t *particles_by_bin = new imy_particle_t[n];
-    for (int pro = 0; pro < n_proc && rank == 0; ++pro) {
+    for (int pro = cur_displs = counter = 0; pro < n_proc && rank == 0; ++pro) {
         sendcnt = 0;
         for (int i = 0; i < n; ++i) {
             if (rank_of_bin(bin_of_particle(size, particles[i])) != pro)      continue;
