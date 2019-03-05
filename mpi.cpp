@@ -404,6 +404,11 @@ int main(int argc, char **argv)
     int lens[5];
     int n_local_particles;
     int particle_size;
+    int counter = 0;
+    int cur_displs = 0;
+    int sendcnt;
+    int sendcnts[n_proc];
+    int displs[n_proc];
 
     MPI_Aint disp[5];
     MPI_Datatype temp;
@@ -423,8 +428,26 @@ int main(int argc, char **argv)
     MPI_Type_create_resized(temp, 0, particle_size, &PARTICLE);
     MPI_Type_commit(&PARTICLE);
 
-    // Populate local particle buffers
-    scatter_particles(size, particles, local_particles, &n_local_particles);
+    //scatter the paritcles to each processors
+
+    imy_particle_t *particles_by_bin = new imy_particle_t[n];
+    for (int pro = 0; prp < n_proc && rank == 0; ++pro) {
+        sendcnt = 0;
+        for (int i = 0; i < n; ++i) {
+            if (rank_of_bin(bin_of_particle(size, particles[i])) != pro)      continue;
+            particles_by_bin[counter] = particles[i];
+            sendcnt++;
+            counter++;
+        }
+        sendcnts[pro] = sendcnt;
+        displs[pro] = cur_displs;
+        cur_displs += sendcnts[pro];
+    }
+
+    MPI_Bcast(&sendcnts[0], n_proc, MPI_INT, 0, MPI_COMM_WORLD);
+    *n_local_particles = sendcnts[rank];
+    MPI_Bcast(&displs[0], n_proc, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Scatterv(particles_by_bin, &sendcnts[0], &displs[0], PARTICLE, local_particles, *n_local_particles, PARTICLE, 0, MPI_COMM_WORLD);
 
     // Initialize local bins
     std::vector<bin_t> bins;
