@@ -578,8 +578,7 @@ int main(int argc, char **argv)
             std::list<imy_particle_t*>::iterator it = bins[b].particles.begin();
             while (it != bins[b].particles.end()) {
                 imy_particle_t *p = *it;
-                p->move2();
-                //move2(p->particle);
+                p->move();
                 int new_b_idx = bin_of_particle(size, *p);
                 if (new_b_idx != b) {
                     bin_t *new_bin = &bins[new_b_idx];
