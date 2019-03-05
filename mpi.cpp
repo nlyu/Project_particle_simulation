@@ -18,7 +18,7 @@
 #define dt      0.0005
 
 #define imy_particle_t_offset(attr) ((size_t)&(((imy_particle_t*)0)->attr))
-// #define imy_particle_t_particle_offset(attr) ((size_t)&(((imy_particle_t*)0)->particle.attr))
+#define imy_particle_t_particle_offset(attr) ((size_t)&(((imy_particle_t*)0)->particle.attr))
 
 
 class my_particle_t{
@@ -35,10 +35,8 @@ public:
 
 class imy_particle_t{
 public:
-    // my_particle_t particle;
+    my_particle_t particle;
     int index;
-    int bin_idx;
-    double x, y, vx, vy, ax, ay;
 };
 
 
@@ -65,7 +63,7 @@ bool operator<(const imy_particle_t &a, const imy_particle_t &b) {
 //
 //  I/O routines
 //
-void save2( FILE *f, int n, imy_particle_t *p )
+void save2( FILE *f, int n, my_particle_t *p )
 {
     static bool first = true;
     if( first )
@@ -77,7 +75,7 @@ void save2( FILE *f, int n, imy_particle_t *p )
         fprintf( f, "%g %g\n", p[i].x, p[i].y );
 }
 
-void move2( imy_particle_t &p )
+void move2( my_particle_t &p )
 {
     //
     //  slightly simplified Velocity Verlet integration
@@ -103,7 +101,7 @@ void move2( imy_particle_t &p )
     }
 }
 
-void apply_force2( imy_particle_t &particle, imy_particle_t &neighbor , double *dmin, double *davg, int *navg)
+void apply_force2( my_particle_t &particle, my_particle_t &neighbor , double *dmin, double *davg, int *navg)
 {
     double dx = neighbor.x - particle.x;
     double dy = neighbor.y - particle.y;
@@ -150,19 +148,18 @@ void init_iparticles(int n, double size, imy_particle_t *p) {
         //
         //  distribute particles evenly to ensure proper spacing
         //
-        p[i].x = size*(1.+(k%sx))/(1+sx);
-        p[i].y = size*(1.+(k/sx))/(1+sy);
+        p[i].particle.x = size*(1.+(k%sx))/(1+sx);
+        p[i].particle.y = size*(1.+(k/sx))/(1+sy);
 
         //
         //  assign random velocities within a bound
         //
-        p[i].vx = drand48()*2-1;
-        p[i].vy = drand48()*2-1;
+        p[i].particle.vx = drand48()*2-1;
+        p[i].particle.vy = drand48()*2-1;
 
         p[i].index = i;
     }
-
-    free(shuffle);
+    free( shuffle );
 }
 
 // int bin_of_particle(double size, imy_particle_t &particle) {
@@ -174,7 +171,7 @@ void init_iparticles(int n, double size, imy_particle_t *p) {
 
 int bin_of_particle(double canvas_side_len, imy_particle_t &p) {
     double bin_side_len = canvas_side_len / bins_per_side;
-    int row_b = floor(p.x / bin_side_len), col_b = floor(p.y / bin_side_len);
+    int row_b = floor(p.particle.x / bin_side_len), col_b = floor(p.particle.y / bin_side_len);
     return row_b + col_b * bins_per_side;
 }
 
@@ -209,7 +206,7 @@ std::vector<int> get_rank_neighbors(int rank) {
 
 void assign_particles_to_bins(int n, double canvas_side_len, imy_particle_t *particles, std::vector<bin_t> &bins) {
     for (int i = 0; i < n; ++i) {
-        int b_idx = particles[i].bin_idx = bin_of_particle(canvas_side_len, particles[i]);
+        int b_idx = particles[i].particle.bin_idx = bin_of_particle(canvas_side_len, particles[i]);
         bins[b_idx].particles.push_back(&particles[i]);
     }
 }
@@ -384,16 +381,15 @@ void init_my_particle_type() {
     MPI_Datatype typs[5];
     MPI_Datatype temp;
     lens[0] = 1;
-    disp[0] = imy_particle_t_offset(x); typs[0] = MPI_DOUBLE;
+    disp[0] = imy_particle_t_particle_offset(x); typs[0] = MPI_DOUBLE;
     lens[1] = 1;
-    disp[1] = imy_particle_t_offset(y); typs[1] = MPI_DOUBLE;
+    disp[1] = imy_particle_t_particle_offset(y); typs[1] = MPI_DOUBLE;
     lens[2] = 1;
-    disp[2] = imy_particle_t_offset(vx); typs[2] = MPI_DOUBLE;
+    disp[2] = imy_particle_t_particle_offset(vx); typs[2] = MPI_DOUBLE;
     lens[3] = 1;
-    disp[3] = imy_particle_t_offset(vy); typs[3] = MPI_DOUBLE;
+    disp[3] = imy_particle_t_particle_offset(vy); typs[3] = MPI_DOUBLE;
     lens[4] = 1;
-    disp[4] = imy_particle_t_offset(index);
-    typs[4] = MPI_INT;
+    disp[4] = imy_particle_t_offset(index); typs[4] = MPI_INT;
     MPI_Type_create_struct(5, lens, disp, typs, &temp);
     MPI_Type_create_resized(temp, 0, sizeof(imy_particle_t), &PARTICLE);
     MPI_Type_commit(&PARTICLE);
@@ -410,8 +406,8 @@ void scatter_particles(double size, imy_particle_t *particles, imy_particle_t *l
         for (int r = 0; r < n_proc; r++) {
             int sendcnt = 0;
             for (int k = 0; k < n; k++) {
-                particles[k].bin_idx = bin_of_particle(size, particles[k]);
-                int rb = rank_of_bin(particles[k].bin_idx);
+                particles[k].particle.bin_idx = bin_of_particle(size, particles[k]);
+                int rb = rank_of_bin(particles[k].particle.bin_idx);
                 if (rb == r) {
                     particles_by_bin[i] = particles[k];
                     sendcnt++;
@@ -510,7 +506,7 @@ int main(int argc, char **argv)
 
         // Zero out the accelerations
         for (int i = 0; i < n_local_particles; ++i) {
-            local_particles[i].ax = local_particles[i].ay = 0;
+            local_particles[i].particle.ax = local_particles[i].particle.ay = 0;
         }
 
         // Compute forces between each local bin and its neighbors
@@ -530,7 +526,7 @@ int main(int argc, char **argv)
                          it1 != bins[b1].particles.end(); it1++) {
                         for (std::list<imy_particle_t*>::const_iterator it2 = bins[b2].particles.begin();
                              it2 != bins[b2].particles.end(); it2++) {
-                            apply_force2(**it1, **it2, &dmin, &davg, &navg);
+                            apply_force2((*it1)->particle, (*it2)->particle, &dmin, &davg, &navg);
                         }
                     }
                 }
@@ -562,14 +558,14 @@ int main(int argc, char **argv)
             int b = *b_it;
             std::list<imy_particle_t*>::iterator it = bins[b].particles.begin();
             while (it != bins[b].particles.end()) {
-                imy_particle_t p = **it;
-                move2(p);
-                int new_b_idx = bin_of_particle(size, p);
+                imy_particle_t *p = *it;
+                move2(p->particle);
+                int new_b_idx = bin_of_particle(size, *p);
                 if (new_b_idx != b) {
                     bin_t *new_bin = &bins[new_b_idx];
-                    p.bin_idx = new_b_idx;
+                    p->particle.bin_idx = new_b_idx;
                     bins[b].particles.erase(it++);
-                    new_bin->incoming.push_back(&p);
+                    new_bin->incoming.push_back(p);
                 } else {
                     it++;
                 }
@@ -610,10 +606,10 @@ int main(int argc, char **argv)
                             0, MPI_COMM_WORLD);
                 if (rank == 0) {
                     std::sort(particles, particles + n);
-                    imy_particle_t *particles_for_save = new imy_particle_t[n];
+                    my_particle_t *particles_for_save = new my_particle_t[n];
                     for (int i = 0; i < n; i++) {
-                        particles_for_save[i].x = particles[i].x;
-                        particles_for_save[i].y = particles[i].y;
+                        particles_for_save[i].x = particles[i].particle.x;
+                        particles_for_save[i].y = particles[i].particle.y;
                     }
                     save2(fsave, n, particles_for_save);
                     delete[] particles_for_save;
