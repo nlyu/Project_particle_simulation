@@ -17,10 +17,10 @@
 #define min_r   (cutoff/100)
 #define dt      0.0005
 
+using namespace std;
 #define imy_particle_t_offset(attr) ((size_t)&(((imy_particle_t*)0)->attr))
 #define imy_particle_t_particle_offset(attr) ((size_t)&(((imy_particle_t*)0)->particle.attr))
 
-using namespace std;
 
 //
 // particle data structure
@@ -170,7 +170,7 @@ int bin_of_particle(double size, imy_particle_t &particle) {
     return b_row + b_col * bins_per_side;
 }
 
-std::vector<int> neighbors_of_rank(int rank) {
+vector<int> neighbors_of_rank(int rank) {
     std::vector<int> neighbor_ranks;
     if (rank > 0) {
         neighbor_ranks.push_back(rank - 1);
@@ -225,7 +225,7 @@ int rank_of_bin(int b_idx) {
 //     return b_row / rows_per_proc;
 // }
 
-std::vector<int> bins_of_rank(int rank) {
+vector<int> bins_of_rank(int rank) {
     std::vector<int> result;
     for (int row = rank * rows_per_proc; row < min((rank + 1) * rows_per_proc, bins_per_side); row++) {
         for (int col = 0; col < bins_per_side; col++) {
@@ -246,7 +246,7 @@ std::vector<int> bins_of_rank(int rank) {
 // }
 
 /** Returns the particles owned by the current rank in bins bordering on other_rank. */
-std::vector<imy_particle_t> border_particles_of_rank(int other_rank, std::vector<bin_t> &bins) {
+vector<imy_particle_t> border_particles_of_rank(int other_rank, std::vector<bin_t> &bins) {
     int row;
     if(other_rank < rank){
         row = rank * rows_per_proc; // first row of rank
