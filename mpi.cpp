@@ -63,6 +63,7 @@ public:
 // } bin_t;
 
 class bin_t{
+public:
     std::list<imy_particle_t*> particles;
     std::list<imy_particle_t*> incoming;
 };
