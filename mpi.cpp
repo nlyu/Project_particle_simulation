@@ -110,32 +110,6 @@ void save2( FILE *f, int n, my_particle_t *p )
         fprintf( f, "%g %g\n", p[i].x, p[i].y );
 }
 
-
-void apply_force2( my_particle_t &particle, my_particle_t &neighbor , double *dmin, double *davg, int *navg)
-{
-    double dx = neighbor.x - particle.x;
-    double dy = neighbor.y - particle.y;
-    double r2 = dx * dx + dy * dy;
-    if( r2 > cutoff*cutoff )
-        return;
-	  if (r2 != 0){
-	      if (r2/(cutoff*cutoff) < *dmin * (*dmin))
-	      *dmin = sqrt(r2)/cutoff;
-           (*davg) += sqrt(r2)/cutoff;
-           (*navg) ++;
-    }
-
-    r2 = fmax( r2, min_r*min_r );
-    double r = sqrt( r2 );
-
-    //
-    //  very simple short-range repulsive force
-    //
-    double coef = ( 1 - cutoff / r ) / r2 / mass;
-    particle.ax += coef * dx;
-    particle.ay += coef * dy;
-}
-
 void init_particles_mpi(int rank, int n, double size, imy_particle_t *p) {
     if(rank != 0)
         return;
@@ -320,36 +294,6 @@ void exchange_moved(double size, imy_particle_t **local_particles_ptr,
     init_bins(*n_local_particles, size2, *local_particles_ptr, bins);
 }
 
-void scatter_particles(double size, imy_particle_t *particles, imy_particle_t *local_particles,
-                       int *n_local_particles) {
-    int counter = 0;
-    int cur_displs = 0;
-    int sendcnt, r;
-    int sendcnts[n_proc];
-    int displs[n_proc];
-
-    imy_particle_t *particles_by_bin = new imy_particle_t[n];
-    for (r = 0; r < n_proc && rank == 0; ++r) {
-        sendcnt = 0;
-        for (int k = 0; k < n; k++) {
-            particles[k].bin_idx = bin_of_particle(size, particles[k]);
-            int rb = rank_of_bin(particles[k].bin_idx);
-            if (rb != r)      continue;
-            particles_by_bin[counter] = particles[k];
-            sendcnt++;
-            counter++;
-        }
-        sendcnts[r] = sendcnt;
-        displs[r] = cur_displs;
-        cur_displs += sendcnts[r];
-    }
-
-    MPI_Bcast(&sendcnts[0], n_proc, MPI_INT, 0, MPI_COMM_WORLD);
-    *n_local_particles = sendcnts[rank];
-    MPI_Bcast(&displs[0], n_proc, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Scatterv(particles_by_bin, &sendcnts[0], &displs[0], PARTICLE, local_particles, *n_local_particles, PARTICLE, 0, MPI_COMM_WORLD);
-}
-
 int main(int argc, char **argv)
 {
     int navg, nabsavg=0;
@@ -386,7 +330,8 @@ int main(int argc, char **argv)
     imy_particle_t *mpi_buffer = new imy_particle_t[3 * n];
     MPI_Buffer_attach(mpi_buffer, 10 * n * sizeof(imy_particle_t));
 
-    // particle initialization
+    // particle initi\]]\
+    alization
     imy_particle_t *particles = (imy_particle_t*) malloc(n * sizeof(imy_particle_t));
     // Allocate local particle buffer
     imy_particle_t *local_particles = (imy_particle_t*) malloc(n * sizeof(imy_particle_t));
@@ -426,7 +371,6 @@ int main(int argc, char **argv)
     MPI_Type_commit(&PARTICLE);
 
     //scatter the paritcles to each processors
-
     imy_particle_t *particles_by_bin = new imy_particle_t[n];
     for (int pro = cur_displs = counter = 0; pro < n_proc && rank == 0; cur_displs += counter_sends[pro], ++pro) {
         counter_send = 0;
