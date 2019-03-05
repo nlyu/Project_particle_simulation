@@ -401,13 +401,10 @@ int main(int argc, char **argv)
     init_particles_mpi(rank, n, size, particles);
 
     // initialize MPI PARTICLE
+    int n_local_particles, particle_size;
+    int counter, offset, counter_send;
     int lens[5];
-    int n_local_particles;
-    int particle_size;
-    int counter;
-    int cur_displs;
-    int sendcnt;
-    int sendcnts[n_proc];
+    int counter_sends[n_proc];
     int displs[n_proc];
 
     MPI_Aint disp[5];
@@ -431,23 +428,23 @@ int main(int argc, char **argv)
     //scatter the paritcles to each processors
 
     imy_particle_t *particles_by_bin = new imy_particle_t[n];
-    for (int pro = cur_displs = counter = 0; pro < n_proc && rank == 0; ++pro) {
-        sendcnt = 0;
+    for (int pro = cur_displs = counter = 0; pro < n_proc && rank == 0; cur_displs += counter_sends[pro], ++pro) {
+        counter_send = 0;
         for (int i = 0; i < n; ++i) {
             if (rank_of_bin(bin_of_particle(size, particles[i])) != pro)      continue;
             particles_by_bin[counter] = particles[i];
-            sendcnt++;
+            counter_send++;
             counter++;
         }
-        sendcnts[pro] = sendcnt;
+        counter_sends[pro] = counter_send;
         displs[pro] = cur_displs;
-        cur_displs += sendcnts[pro];
     }
 
-    MPI_Bcast(&sendcnts[0], n_proc, MPI_INT, 0, MPI_COMM_WORLD);
-    n_local_particles = sendcnts[rank];
+
+    MPI_Bcast(&counter_sends[0], n_proc, MPI_INT, 0, MPI_COMM_WORLD);
+    n_local_particles = counter_sends[rank];
     MPI_Bcast(&displs[0], n_proc, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Scatterv(particles_by_bin, &sendcnts[0], &displs[0], PARTICLE, local_particles, n_local_particles, PARTICLE, 0, MPI_COMM_WORLD);
+    MPI_Scatterv(particles_by_bin, &counter_sends[0], &displs[0], PARTICLE, local_particles, n_local_particles, PARTICLE, 0, MPI_COMM_WORLD);
 
     // Initialize local bins
     std::vector<bin_t> bins;
