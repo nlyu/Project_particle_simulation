@@ -37,6 +37,32 @@ class imy_particle_t{
 public:
     my_particle_t particle;
     int index;
+
+    void move2()
+    {
+        //
+        //  slightly simplified Velocity Verlet integration
+        //  conserves energy better than explicit Euler method
+        //
+        this.particle.vx += this.particle.ax * dt;
+        this.particle.vy += this.particle.ay * dt;
+        this.particle.x  += this.particle.vx * dt;
+        this.particle.y  += this.particle.vy * dt;
+
+        //
+        //  bounce from walls
+        //
+        while(this.particle.x < 0 || this.particle.x > size2 )
+        {
+            this.particle.x  = this.particle.x < 0 ? -this.particle.x : 2 * size2- this.particle.x;
+            this.particle.vx = -this.particle.vx;
+        }
+        while( this.particle.y < 0 || this.particle.y > size2 )
+        {
+            this.particle.y  = this.particle.y < 0 ? -this.particle.y : 2*size2-this.particle.y;
+            this.particle.vy = -this.particle.vy;
+        }
+    }
 };
 
 
@@ -559,7 +585,8 @@ int main(int argc, char **argv)
             std::list<imy_particle_t*>::iterator it = bins[b].particles.begin();
             while (it != bins[b].particles.end()) {
                 imy_particle_t *p = *it;
-                move2(p->particle);
+                p->move2();
+                //move2(p->particle);
                 int new_b_idx = bin_of_particle(size, *p);
                 if (new_b_idx != b) {
                     bin_t *new_bin = &bins[new_b_idx];
