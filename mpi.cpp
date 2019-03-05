@@ -20,7 +20,6 @@
 #define imy_particle_t_offset(attr) ((size_t)&(((imy_particle_t*)0)->attr))
 #define imy_particle_t_particle_offset(attr) ((size_t)&(((imy_particle_t*)0)->particle.attr))
 
-using namespace std;
 
 //
 // particle data structure
@@ -56,6 +55,8 @@ int n;
 int rows_per_proc;
 
 double size2;
+
+using namespace std;
 
 bool operator<(const imy_particle_t &a, const imy_particle_t &b) {
     return a.index < b.index;
