@@ -106,7 +106,7 @@ public:
         clear_incoming();
     }
 
-    void moved_particles_bin(bin_t &bins, int b_it){
+    void moved_particles_bin(std::vector<bin_t> &bins, int b_it){
         auto it = this->particles.begin();
         while (it != this->particles.end()) {
             imy_particle_t *p = *it;
