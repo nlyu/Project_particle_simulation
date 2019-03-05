@@ -24,27 +24,48 @@
 //
 // particle data structure
 //
-typedef struct
-{
-  int bin_idx;
-  double x;
-  double y;
-  double vx;
-  double vy;
-  double ax;
-  double ay;
-} my_particle_t;
+// typedef struct
+// {
+//   int bin_idx;
+//   double x;
+//   double y;
+//   double vx;
+//   double vy;
+//   double ax;
+//   double ay;
+// } my_particle_t;
+class my_particle_t{
+public:
+      int bin_idx;
+      double x;
+      double y;
+      double vx;
+      double vy;
+      double ax;
+      double ay;
+};
 
 // Indexed particle
-typedef struct {
+// typedef struct {
+//     my_particle_t particle;
+//     int index;
+// } imy_particle_t;
+
+class imy_particle_t{
+public:
     my_particle_t particle;
     int index;
-} imy_particle_t;
+};
 
-typedef struct bin_t {
+// typedef struct bin_t {
+//     std::list<imy_particle_t*> particles;
+//     std::list<imy_particle_t*> incoming;
+// } bin_t;
+
+class bin_t{
     std::list<imy_particle_t*> particles;
     std::list<imy_particle_t*> incoming;
-} bin_t;
+};
 
 MPI_Datatype PARTICLE;
 
