@@ -20,25 +20,16 @@
 #define imy_particle_t_offset(attr) ((size_t)&(((imy_particle_t*)0)->attr))
 #define imy_particle_t_particle_offset(attr) ((size_t)&(((imy_particle_t*)0)->particle.attr))
 
-MPI_Datatype PARTICLE;
 
-int bins_per_side;
-int n_bins;
-int n_proc, rank;
-int n;
-int rows_per_proc;
-
+int bins_per_side, n_bins, n_proc, rank, n, rows_per_proc;
 double size2;
+
+MPI_Datatype PARTICLE;
 
 class my_particle_t{
 public:
       int bin_idx;
-      double x;
-      double y;
-      double vx;
-      double vy;
-      double ax;
-      double ay;
+      double x, y, vx, vy, ax, ay;
 };
 
 
@@ -145,7 +136,9 @@ void apply_force2( my_particle_t &particle, my_particle_t &neighbor , double *dm
     particle.ay += coef * dy;
 }
 
-void init_iparticles(int n, double size, imy_particle_t *p) {
+void init_particles_mpi(int rank, int n, double size, imy_particle_t *p) {
+    if(rank != 0)
+        return;
     srand48( time( NULL ) );
 
     int sx = (int)ceil(sqrt((double)n));
@@ -283,7 +276,6 @@ void exchange_moved(double size, imy_particle_t **local_particles_ptr,
         std::vector<imy_particle_t> moved_particles;
         for (int b_idx = 0; b_idx < n_bins; b_idx++) {
             if (rank_of_bin(b_idx) == neighbor_ranks[i]) {
-                //for (std::list<imy_particle_t *>::const_iterator p_it = bins[b_idx].incoming.begin(); p_it != bins[b_idx].incoming.end(); p_it++) {
                 for(auto &it: bins[b_idx].incoming){
                     moved_particles.push_back(*it);
                 }
@@ -410,16 +402,18 @@ int main(int argc, char **argv)
     n_bins = bins_per_side * bins_per_side;
     rows_per_proc = ceil(bins_per_side / (float)n_proc);
 
-    if (rank == 0) {
-        init_iparticles(n, size, particles);
-    }
+    init_particles_mpi(rank, n, size, particles);
 
     // initialize MPI PARTICLE
     int lens[5];
     int n_local_particles;
+    int particle_size;
+
     MPI_Aint disp[5];
     MPI_Datatype temp;
     MPI_Datatype types[5];
+
+    particle_size = sizeof(imy_particle_t);
     std::fill_n(lens, 5, 1);
     std::fill_n(types, 4, MPI_DOUBLE);
     types[4] = MPI_INT;
@@ -430,7 +424,7 @@ int main(int argc, char **argv)
     disp[4] = imy_particle_t_offset(index);
 
     MPI_Type_create_struct(5, lens, disp, types, &temp);
-    MPI_Type_create_resized(temp, 0, sizeof(imy_particle_t), &PARTICLE);
+    MPI_Type_create_resized(temp, 0, particle_size, &PARTICLE);
     MPI_Type_commit(&PARTICLE);
 
     // Populate local particle buffers
