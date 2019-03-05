@@ -47,20 +47,16 @@ public:
     my_particle_t particle;
     int index;
 
-    void move2()
+    void move()
     {
-        //
         //  slightly simplified Velocity Verlet integration
         //  conserves energy better than explicit Euler method
-        //
         this->particle.vx += this->particle.ax * dt;
         this->particle.vy += this->particle.ay * dt;
         this->particle.x  += this->particle.vx * dt;
         this->particle.y  += this->particle.vy * dt;
 
-        //
         //  bounce from walls
-        //
         while(this->particle.x < 0 || this->particle.x > size2 )
         {
             this->particle.x  = this->particle.x < 0 ? -this->particle.x : 2 * size2- this->particle.x;
@@ -71,6 +67,29 @@ public:
             this->particle.y  = this->particle.y < 0 ? -this->particle.y : 2*size2-this->particle.y;
             this->particle.vy = -this->particle.vy;
         }
+    }
+
+    void apply_force(my_particle_t &neighbor , double *dmin, double *davg, int *navg)
+    {
+        double dx = neighbor.x - this->particle.x;
+        double dy = neighbor.y - this->particle.y;
+        double r2 = dx * dx + dy * dy;
+        if(r2 > cutoff*cutoff)
+            return;
+    	  if (r2 != 0){
+    	      if (r2/(cutoff*cutoff) < *dmin * (*dmin))
+    	      *dmin = sqrt(r2)/cutoff;
+            (*davg) += sqrt(r2)/cutoff;
+            (*navg) ++;
+        }
+
+        r2 = fmax( r2, min_r*min_r );
+        double r = sqrt( r2 );
+
+        //  very simple short-range repulsive force
+        double coef = ( 1 - cutoff / r ) / r2 / mass;
+        this->particle.ax += coef * dx;
+        this->particle.ay += coef * dy;
     }
 };
 
@@ -100,31 +119,6 @@ void save2( FILE *f, int n, my_particle_t *p )
         fprintf( f, "%g %g\n", p[i].x, p[i].y );
 }
 
-void move2( my_particle_t &p )
-{
-    //
-    //  slightly simplified Velocity Verlet integration
-    //  conserves energy better than explicit Euler method
-    //
-    p.vx += p.ax * dt;
-    p.vy += p.ay * dt;
-    p.x  += p.vx * dt;
-    p.y  += p.vy * dt;
-
-    //
-    //  bounce from walls
-    //
-    while( p.x < 0 || p.x > size2 )
-    {
-        p.x  = p.x < 0 ? -p.x : 2*size2-p.x;
-        p.vx = -p.vx;
-    }
-    while( p.y < 0 || p.y > size2 )
-    {
-        p.y  = p.y < 0 ? -p.y : 2*size2-p.y;
-        p.vy = -p.vy;
-    }
-}
 
 void apply_force2( my_particle_t &particle, my_particle_t &neighbor , double *dmin, double *davg, int *navg)
 {
@@ -551,7 +545,7 @@ int main(int argc, char **argv)
                          it1 != bins[b1].particles.end(); it1++) {
                         for (std::list<imy_particle_t*>::const_iterator it2 = bins[b2].particles.begin();
                              it2 != bins[b2].particles.end(); it2++) {
-                            apply_force2((*it1)->particle, (*it2)->particle, &dmin, &davg, &navg);
+                             (*it1)->apply_force((*it2)->particle, &dmin, &davg, &navg);
                         }
                     }
                 }
