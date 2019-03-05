@@ -291,7 +291,6 @@ std::vector<imy_particle_t> get_rank_border_particles(int nei_rank, std::vector<
             res.push_back(**it);
             n_particles++;
         }
-        assert(get_bin_rank(row + col * bins_per_side) == rank);
     }
     return res;
 }
