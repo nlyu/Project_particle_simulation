@@ -448,12 +448,12 @@ int main(int argc, char **argv)
 
         //  move particles
         for (auto &b_it: local_bin_idxs) {
-            std::list<imy_particle_t*>::iterator it = bins[b].particles.begin();
+            std::list<imy_particle_t*>::iterator it = bins[b_it].particles.begin();
             while (it != bins[b_it].particles.end()) {
                 imy_particle_t *p = *it;
                 p->move();
                 int new_b_idx = bin_of_particle(size, *p);
-                if (new_b_idx != b) {
+                if (new_b_idx != b_it) {
                     bin_t *new_bin = &bins[new_b_idx];
                     p->bin_idx = new_b_idx;
                     bins[b_it].particles.erase(it++);
