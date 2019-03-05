@@ -322,7 +322,7 @@ void exchange_moved(double size, imy_particle_t **local_particles_ptr,
 
 void scatter_particles(double size, imy_particle_t *particles, imy_particle_t *local_particles,
                        int *n_local_particles) {
-    int i = 0
+    int i = 0;
     int cur_displs = 0;
     int sendcnt, r;
     int sendcnts[n_proc];
