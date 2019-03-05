@@ -19,7 +19,7 @@
 
 #define imy_particle_t_offset(attr) ((size_t)&(((imy_particle_t*)0)->attr))
 #define imy_particle_t_particle_offset(attr) ((size_t)&(((imy_particle_t*)0)->particle.attr))
-
+#define for_bin(i)     for(int i = max(0, i - 1); i <= min(bins_per_side - 1, i + 1); ++i)
 
 int bins_per_side, n_bins, n_proc, rank, n, rows_per_proc;
 double size2;
@@ -417,18 +417,12 @@ int main(int argc, char **argv)
         for (auto &idx:local_bin_idxs){
             int b1_row = idx % bins_per_side;
             int b1_col = idx / bins_per_side;
-            for (int b2_row = max(0, b1_row - 1);
-                 b2_row <= min(bins_per_side - 1, b1_row + 1);
-                 b2_row++) {
-                for (int b2_col = max(0, b1_col - 1);
-                     b2_col <= min(bins_per_side - 1, b1_col + 1);
-                     b2_col++) {
+            for_bin(b2_row){
+                for_bin(b2_col){
                     int b2 = b2_row + b2_col * bins_per_side;
-                    for (std::list<imy_particle_t*>::const_iterator it1 = bins[idx].particles.begin();
-                         it1 != bins[idx].particles.end(); it1++) {
-                        for (std::list<imy_particle_t*>::const_iterator it2 = bins[b2].particles.begin();
-                             it2 != bins[b2].particles.end(); it2++) {
-                             (*it1)->apply_force((*it2)->particle, &dmin, &davg, &navg);
+                    for(std::list<imy_particle_t *> &it1 = bins[idx].particles){
+                        for (std::list<imy_particle_t *> &it2 = bins[b2].particles){
+                             (it1)->apply_force((it2)->particle, &dmin, &davg, &navg);
                         }
                     }
                 }
