@@ -31,6 +31,7 @@ public:
       double x, y, vx, vy, ax, ay;
 };
 
+int bin_of_particle(double canvas_side_len, imy_particle_t &p);
 
 class imy_particle_t{
 public:
@@ -105,6 +106,22 @@ public:
     void binning(){
         splice();
         clear_incoming();
+    }
+
+    void moved_particles_bin(bin_t * bins){
+        auto it = this->particles.begin();
+        while (it != this->particles.end()) {
+            imy_particle_t *p = *it;
+            p->move();
+            int new_b_idx = bin_of_particle(size, *p);
+            if (new_b_idx != b_it) { //if particle is not in the same position
+                p->bin_idx = new_b_idx;
+                this->particles.erase(it++);
+                bins[new_b_idx].incoming.push_back(p);
+            } else {
+                it++;
+            }
+        }
     }
 };
 
@@ -452,9 +469,7 @@ int main(int argc, char **argv)
             MPI_Reduce(&dmin,&rdmin,1,MPI_DOUBLE,MPI_MIN,0,MPI_COMM_WORLD);
 
             if (rank == 0) {
-                //
                 // Computing statistical data
-                //
                 if (rnavg) {
                     absavg += rdavg/rnavg;
                     nabsavg++;
@@ -465,26 +480,24 @@ int main(int argc, char **argv)
 
         //  move particles
         for (auto &b_it: local_bin_idxs) {
-            std::list<imy_particle_t*>::iterator it = bins[b_it].particles.begin();
-            while (it != bins[b_it].particles.end()) {
-                imy_particle_t *p = *it;
-                p->move();
-                int new_b_idx = bin_of_particle(size, *p);
-                if (new_b_idx != b_it) {
-                    bin_t *new_bin = &bins[new_b_idx];
-                    p->bin_idx = new_b_idx;
-                    bins[b_it].particles.erase(it++);
-                    new_bin->incoming.push_back(p);
-                } else {
-                    it++;
-                }
-            }
+            // auto it = bins[b_it].particles.begin();
+            // while (it != bins[b_it].particles.end()) {
+            //     imy_particle_t *p = *it;
+            //     p->move();
+            //     int new_b_idx = bin_of_particle(size, *p);
+            //     if (new_b_idx != b_it) { //if particle is not in the same position
+            //         p->bin_idx = new_b_idx;
+            //         bins[b_it].particles.erase(it++);
+            //         bins[new_b_idx].incoming.push_back(p);
+            //     } else {
+            //         it++;
+            //     }
+            // }
+            bins[b_it].moved_particles_bin(bins);
         }
 
         for (auto &b_it: local_bin_idxs) {
             bins[b_it].binning();
-            //bins[b_it].particles.splice(bins[b_it].particles.end(), bins[b_it].incoming);
-            //bins[b_it].incoming.clear();
         }
 
         exchange_moved(size, &local_particles, bins, local_bin_idxs, &n_local_particles);
