@@ -101,6 +101,11 @@ public:
     void clear_particles(){
         this->particles.clear();
     }
+
+    void binning(){
+        splice();
+        clear_incoming();
+    }
 };
 
 bool operator<(const imy_particle_t &a, const imy_particle_t &b) {
@@ -477,8 +482,7 @@ int main(int argc, char **argv)
         }
 
         for (auto &b_it: local_bin_idxs) {
-            bins[b_it].splice();
-            bins[b_it].clear_incoming();
+            bins[b_it].binning();
             //bins[b_it].particles.splice(bins[b_it].particles.end(), bins[b_it].incoming);
             //bins[b_it].incoming.clear();
         }
