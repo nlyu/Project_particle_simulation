@@ -181,12 +181,12 @@ int bin_of_particle(double size, imy_particle_t &particle) {
 //     return neighbor_ranks;
 // }
 
-vector<int> get_rank_neighbors(int rank) {
+vector<int> get_rank_neighbors(int _rank) {
     std::vector<int> rank_neis;
-    if (rank > 0)
-        rank_neis.push_back(rank - 1);
-    if (rank + 1 < n_proc)
-        rank_neis.push_back(rank + 1);
+    if (_rank > 0)
+        rank_neis.push_back(_rank - 1);
+    if (_rank + 1 < n_proc)
+        rank_neis.push_back(_rank + 1);
     return rank_neis;
 }
 
@@ -236,10 +236,10 @@ int get_bin_rank(int b_idx) {
 //     return result;
 // }
 
-vector<int> bins_of_rank(int rank) {
+vector<int> bins_of_rank(int _rank) {
     vector<int> res;
-    int row_s = rank * rows_per_proc,
-        row_e = min(bins_per_side, rows_per_proc * (rank + 1));
+    int row_s = _rank * rows_per_proc,
+        row_e = min(bins_per_side, rows_per_proc * (_rank + 1));
     for (int row = row_s; row < row_e; ++row)
         for (int col = 0; col < bins_per_side; ++col)
             res.push_back(row + col * bins_per_side);
