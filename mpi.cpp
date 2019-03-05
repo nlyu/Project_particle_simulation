@@ -31,8 +31,6 @@ public:
       double x, y, vx, vy, ax, ay;
 };
 
-int bin_of_particle(double canvas_side_len, imy_particle_t &p);
-
 class imy_particle_t{
 public:
     my_particle_t particle;
@@ -108,12 +106,14 @@ public:
         clear_incoming();
     }
 
-    void moved_particles_bin(bin_t * bins){
+    void moved_particles_bin(bin_t &bins, int b_it){
         auto it = this->particles.begin();
         while (it != this->particles.end()) {
             imy_particle_t *p = *it;
             p->move();
-            int new_b_idx = bin_of_particle(size, *p);
+            double bin_side_len = size2 / bins_per_side;
+            int row_b = floor(p->particle.x / bin_side_len), col_b = floor(p->particle.y / bin_side_len);
+            int new_b_idx =  row_b + col_b * bins_per_side;
             if (new_b_idx != b_it) { //if particle is not in the same position
                 p->bin_idx = new_b_idx;
                 this->particles.erase(it++);
@@ -493,7 +493,7 @@ int main(int argc, char **argv)
             //         it++;
             //     }
             // }
-            bins[b_it].moved_particles_bin(bins);
+            bins[b_it].moved_particles_bin(bins, b_it);
         }
 
         for (auto &b_it: local_bin_idxs) {
