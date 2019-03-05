@@ -20,6 +20,15 @@
 #define imy_particle_t_offset(attr) ((size_t)&(((imy_particle_t*)0)->attr))
 #define imy_particle_t_particle_offset(attr) ((size_t)&(((imy_particle_t*)0)->particle.attr))
 
+MPI_Datatype PARTICLE;
+
+int bins_per_side;
+int n_bins;
+int n_proc, rank;
+int n;
+int rows_per_proc;
+
+double size2;
 
 class my_particle_t{
 public:
@@ -71,16 +80,6 @@ public:
     std::list<imy_particle_t*> particles;
     std::list<imy_particle_t*> incoming;
 };
-
-MPI_Datatype PARTICLE;
-
-int bins_per_side;
-int n_bins;
-int n_proc, rank;
-int n;
-int rows_per_proc;
-
-double size2;
 
 bool operator<(const imy_particle_t &a, const imy_particle_t &b) {
     return a.index < b.index;
