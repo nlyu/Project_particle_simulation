@@ -20,6 +20,8 @@
 #define imy_particle_t_offset(attr) ((size_t)&(((imy_particle_t*)0)->attr))
 #define imy_particle_t_particle_offset(attr) ((size_t)&(((imy_particle_t*)0)->particle.attr))
 
+using namespace std;
+
 //
 // particle data structure
 //
