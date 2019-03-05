@@ -28,7 +28,6 @@ MPI_Datatype PARTICLE;
 
 class my_particle_t{
 public:
-      int bin_idx;
       double x, y, vx, vy, ax, ay;
 };
 
@@ -37,6 +36,7 @@ class imy_particle_t{
 public:
     my_particle_t particle;
     int index;
+    int bin_idx;
 
     void move()
     {
@@ -191,7 +191,7 @@ std::vector<int> get_rank_neighbors(int rank) {
 
 void assign_particles_to_bins(int n, double canvas_side_len, imy_particle_t *particles, std::vector<bin_t> &bins) {
     for (int i = 0; i < n; ++i) {
-        int b_idx = particles[i].particle.bin_idx = bin_of_particle(canvas_side_len, particles[i]);
+        int b_idx = particles[i].bin_idx = bin_of_particle(canvas_side_len, particles[i]);
         bins[b_idx].particles.push_back(&particles[i]);
     }
 }
@@ -331,8 +331,8 @@ void scatter_particles(double size, imy_particle_t *particles, imy_particle_t *l
         for (int r = 0; r < n_proc; r++) {
             int sendcnt = 0;
             for (int k = 0; k < n; k++) {
-                particles[k].particle.bin_idx = bin_of_particle(size, particles[k]);
-                int rb = rank_of_bin(particles[k].particle.bin_idx);
+                particles[k].bin_idx = bin_of_particle(size, particles[k]);
+                int rb = rank_of_bin(particles[k].bin_idx);
                 if (rb == r) {
                     particles_by_bin[i] = particles[k];
                     sendcnt++;
@@ -505,7 +505,7 @@ int main(int argc, char **argv)
                 int new_b_idx = bin_of_particle(size, *p);
                 if (new_b_idx != b) {
                     bin_t *new_bin = &bins[new_b_idx];
-                    p->particle.bin_idx = new_b_idx;
+                    p->bin_idx = new_b_idx;
                     bins[b].particles.erase(it++);
                     new_bin->incoming.push_back(p);
                 } else {
