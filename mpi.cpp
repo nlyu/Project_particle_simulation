@@ -414,11 +414,9 @@ int main(int argc, char **argv)
         }
 
         // Compute forces between each local bin and its neighbors
-        for (std::vector<int>::const_iterator it = local_bin_idxs.begin();
-             it != local_bin_idxs.end(); it++) {
-            int b1 = *it;
-            int b1_row = b1 % bins_per_side;
-            int b1_col = b1 / bins_per_side;
+        for (auto &idx:local_bin_idxs){
+            int b1_row = idx % bins_per_side;
+            int b1_col = idx / bins_per_side;
             for (int b2_row = max(0, b1_row - 1);
                  b2_row <= min(bins_per_side - 1, b1_row + 1);
                  b2_row++) {
