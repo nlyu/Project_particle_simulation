@@ -322,7 +322,7 @@ void exchange_moved(double size, imy_particle_t **local_particles_ptr,
 
 void scatter_particles(double size, imy_particle_t *particles, imy_particle_t *local_particles,
                        int *n_local_particles) {
-    int i = 0;
+    int counter = 0;
     int cur_displs = 0;
     int sendcnt, r;
     int sendcnts[n_proc];
@@ -335,9 +335,9 @@ void scatter_particles(double size, imy_particle_t *particles, imy_particle_t *l
             particles[k].bin_idx = bin_of_particle(size, particles[k]);
             int rb = rank_of_bin(particles[k].bin_idx);
             if (rb != r)      continue;
-            particles_by_bin[i] = particles[k];
+            particles_by_bin[counter] = particles[k];
             sendcnt++;
-            i++;
+            counter++;
         }
         sendcnts[r] = sendcnt;
         displs[r] = cur_displs;
