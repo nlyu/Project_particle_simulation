@@ -225,8 +225,7 @@ int rank_of_bin(int b_idx) {
 //     return b_row / rows_per_proc;
 // }
 
-// std::vector<int> bins_of_rank(int rank) {
-
+std::vector<int> bins_of_rank(int rank) {
     std::vector<int> result;
     for (int row = rank * rows_per_proc; row < min((rank + 1) * rows_per_proc, bins_per_side); row++) {
         for (int col = 0; col < bins_per_side; col++) {
