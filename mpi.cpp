@@ -561,14 +561,14 @@ int main(int argc, char **argv)
             int b = *b_it;
             std::list<imy_particle_t*>::iterator it = bins[b].particles.begin();
             while (it != bins[b].particles.end()) {
-                imy_particle_t *p = *it;
-                move2(*p);
-                int new_b_idx = bin_of_particle(size, *p);
+                imy_particle_t p = **it;
+                move2(p);
+                int new_b_idx = bin_of_particle(size, p);
                 if (new_b_idx != b) {
                     bin_t *new_bin = &bins[new_b_idx];
                     p.bin_idx = new_b_idx;
                     bins[b].particles.erase(it++);
-                    new_bin->incoming.push_back(p);
+                    new_bin->incoming.push_back(&p);
                 } else {
                     it++;
                 }
