@@ -91,7 +91,7 @@ public:
     std::list<imy_particle_t*> incoming;
 
     void splice(){
-        this->particles.splice(bins[this->particles.end(), this->incoming);
+        this->particles.splice(this->particles.end(), this->incoming);
     }
 
     void clear_incoming(){
