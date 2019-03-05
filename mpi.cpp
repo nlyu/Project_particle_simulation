@@ -420,8 +420,8 @@ int main(int argc, char **argv)
             for_bin(b2_row){
                 for_bin(b2_col){
                     int b2 = b2_row + b2_col * bins_per_side;
-                    for(std::list<imy_particle_t *> &it1: bins[idx].particles){
-                        for (std::list<imy_particle_t *> &it2: bins[b2].particles){
+                    for(auto &it1: bins[idx].particles){
+                        for (auto &it2: bins[b2].particles){
                              (it1)->apply_force((it2)->particle, &dmin, &davg, &navg);
                         }
                     }
