@@ -390,46 +390,45 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &n_proc);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    // receieve & send buffer
-    imy_particle_t *mpi_buffer = new imy_particle_t[3 * n];
-    MPI_Buffer_attach(mpi_buffer, 10 * n * sizeof(imy_particle_t));
-
     // Allocate generic resources
     FILE *fsave = savename && rank == 0 ? fopen(savename, "w") : NULL;
     FILE *fsum = sumname && rank == 0 ? fopen (sumname, "a") : NULL;
 
+    // receieve & send buffer
+    imy_particle_t *mpi_buffer = new imy_particle_t[3 * n];
+    MPI_Buffer_attach(mpi_buffer, 10 * n * sizeof(imy_particle_t));
+
     // particle initialization
     imy_particle_t *particles = (imy_particle_t*) malloc(n * sizeof(imy_particle_t));
-    size2 = sqrt(density * n);
+    // Allocate local particle buffer
+    imy_particle_t *local_particles = (imy_particle_t*) malloc(n * sizeof(imy_particle_t));
 
-    double size = sqrt(0.0005 * n);
-    bins_per_side = read_int(argc, argv, "-b", max(1, sqrt(0.0005 * n) / (0.01 * 3)));
+    size2 = sqrt(density * n);
+    double size = sqrt(density * n);
+
+    bins_per_side = max(1, sqrt(density * n) / (0.01 * 3));
     n_bins = bins_per_side * bins_per_side;
     rows_per_proc = ceil(bins_per_side / (float)n_proc);
-    if (rank == 0) {
+    i
+    f (rank == 0) {
         init_iparticles(n, size, particles);
     }
 
-    // Allocate local particle buffer
-    imy_particle_t *local_particles = (imy_particle_t*) malloc(n * sizeof(imy_particle_t));
-    int n_local_particles;
-
     // initialize MPI PARTICLE
     int lens[5];
+    int n_local_particles;
     MPI_Aint disp[5];
-    MPI_Datatype typs[5];
     MPI_Datatype temp;
+    MPI_Datatype typs[5];
     std::fill_n(lens, 5, 1);
-    disp[0] = imy_particle_t_particle_offset(x);
-    typs[0] = MPI_DOUBLE;
-    disp[1] = imy_particle_t_particle_offset(y);
-    typs[1] = MPI_DOUBLE;
-    disp[2] = imy_particle_t_particle_offset(vx);
-    typs[2] = MPI_DOUBLE;
-    disp[3] = imy_particle_t_particle_offset(vy);
-    typs[3] = MPI_DOUBLE;
-    disp[4] = imy_particle_t_offset(index);
+    std::fill_n(type, 4, MPI_DOUBLE);
     typs[4] = MPI_INT;
+    disp[0] = imy_particle_t_particle_offset(x);
+    disp[1] = imy_particle_t_particle_offset(y);
+    disp[2] = imy_particle_t_particle_offset(vx);
+    disp[3] = imy_particle_t_particle_offset(vy);
+    disp[4] = imy_particle_t_offset(index);
+
     MPI_Type_create_struct(5, lens, disp, typs, &temp);
     MPI_Type_create_resized(temp, 0, sizeof(imy_particle_t), &PARTICLE);
     MPI_Type_commit(&PARTICLE);
