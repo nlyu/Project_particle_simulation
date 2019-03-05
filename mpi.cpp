@@ -417,8 +417,10 @@ int main(int argc, char **argv)
         for (auto &idx:local_bin_idxs){
             int b1_row = idx % bins_per_side;
             int b1_col = idx / bins_per_side;
-            for (int b2_row = max(0, b1_row - 1); b2_row <= min(bins_per_side - 1, b1_row + 1); b2_row++) {
-                for (int b2_col = max(0, b1_col - 1); b2_col <= min(bins_per_side - 1, b1_col + 1); b2_col++) {
+            for_bin(b2_row){
+            //for (int b2_row = max(0, b1_row - 1); b2_row <= min(bins_per_side - 1, b1_row + 1); b2_row++) {
+                for_bin(b2_col){
+                //for (int b2_col = max(0, b1_col - 1); b2_col <= min(bins_per_side - 1, b1_col + 1); b2_col++) {
                     int b2 = b2_row + b2_col * bins_per_side;
                     for (std::list<imy_particle_t*>::const_iterator it1 = bins[idx].particles.begin();
                          it1 != bins[idx].particles.end(); it1++) {
