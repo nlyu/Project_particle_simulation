@@ -414,15 +414,15 @@ int main(int argc, char **argv)
         }
 
         // Compute forces between each local bin and its neighbors
-        for (auto &idx: local_bin_idxs){
+        for (auto &idx:local_bin_idxs){
             int b1_row = idx % bins_per_side;
             int b1_col = idx / bins_per_side;
             for_bin(b2_row){
                 for_bin(b2_col){
                     int b2 = b2_row + b2_col * bins_per_side;
-                    for(auto it1: bins[idx].particles){
-                        for (auto it2: bins[b2].particles){
-                             it1->apply_force((it2)->particle, &dmin, &davg, &navg);
+                    for(std::list<imy_particle_t *>::const_iterator it1 = bins[idx].particles.begin();it1 != bins[idx].particles.end(); it1++){
+                        for(std::list<imy_particle_t *>::const_iterator it2 = bins[b2].particles.begin();it2 != bins[b2].particles.end(); it2++){
+                             (*it1)->apply_force((*it2)->particle, &dmin, &davg, &navg);
                         }
                     }
                 }
@@ -447,18 +447,16 @@ int main(int argc, char **argv)
         }
 
         //  move particles
-        for (std::vector<int>::const_iterator b_it = local_bin_idxs.begin();
-             b_it != local_bin_idxs.end(); b_it++) {
-            int b = *b_it;
-            std::list<imy_particle_t*>::iterator it = bins[b].particles.begin();
-            while (it != bins[b].particles.end()) {
+        for (auto &b_it: local_bin_idxs) {
+            std::list<imy_particle_t*>::iterator it = bins[b_it].particles.begin();
+            while (it != bins[b_it].particles.end()) {
                 imy_particle_t *p = *it;
                 p->move();
                 int new_b_idx = bin_of_particle(size, *p);
-                if (new_b_idx != b) {
+                if (new_b_idx != b_it) {
                     bin_t *new_bin = &bins[new_b_idx];
                     p->bin_idx = new_b_idx;
-                    bins[b].particles.erase(it++);
+                    bins[b_it].particles.erase(it++);
                     new_bin->incoming.push_back(p);
                 } else {
                     it++;
