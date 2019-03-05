@@ -419,17 +419,17 @@ int main(int argc, char **argv)
     int n_local_particles;
     MPI_Aint disp[5];
     MPI_Datatype temp;
-    MPI_Datatype typs[5];
+    MPI_Datatype types[5];
     std::fill_n(lens, 5, 1);
-    std::fill_n(type, 4, MPI_DOUBLE);
-    typs[4] = MPI_INT;
+    std::fill_n(types, 4, MPI_DOUBLE);
+    types[4] = MPI_INT;
     disp[0] = imy_particle_t_particle_offset(x);
     disp[1] = imy_particle_t_particle_offset(y);
     disp[2] = imy_particle_t_particle_offset(vx);
     disp[3] = imy_particle_t_particle_offset(vy);
     disp[4] = imy_particle_t_offset(index);
 
-    MPI_Type_create_struct(5, lens, disp, typs, &temp);
+    MPI_Type_create_struct(5, lens, disp, types, &temp);
     MPI_Type_create_resized(temp, 0, sizeof(imy_particle_t), &PARTICLE);
     MPI_Type_commit(&PARTICLE);
 
