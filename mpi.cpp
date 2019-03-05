@@ -402,7 +402,7 @@ int main(int argc, char **argv)
 
     // initialize MPI PARTICLE
     int n_local_particles, particle_size;
-    int counter, offset, counter_send;
+    int counter, cur_displs, counter_send;
     int lens[5];
     int counter_sends[n_proc];
     int displs[n_proc];
