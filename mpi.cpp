@@ -409,8 +409,8 @@ int main(int argc, char **argv)
     bins_per_side = max(1, sqrt(density * n) / (0.01 * 3));
     n_bins = bins_per_side * bins_per_side;
     rows_per_proc = ceil(bins_per_side / (float)n_proc);
-    i
-    f (rank == 0) {
+
+    if (rank == 0) {
         init_iparticles(n, size, particles);
     }
 
