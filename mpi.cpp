@@ -44,23 +44,23 @@ public:
         //  slightly simplified Velocity Verlet integration
         //  conserves energy better than explicit Euler method
         //
-        this.particle.vx += this.particle.ax * dt;
-        this.particle.vy += this.particle.ay * dt;
-        this.particle.x  += this.particle.vx * dt;
-        this.particle.y  += this.particle.vy * dt;
+        this->particle.vx += this->particle.ax * dt;
+        this->particle.vy += this->particle.ay * dt;
+        this->particle.x  += this->particle.vx * dt;
+        this->particle.y  += this->particle.vy * dt;
 
         //
         //  bounce from walls
         //
-        while(this.particle.x < 0 || this.particle.x > size2 )
+        while(this->particle.x < 0 || this->particle.x > size2 )
         {
-            this.particle.x  = this.particle.x < 0 ? -this.particle.x : 2 * size2- this.particle.x;
-            this.particle.vx = -this.particle.vx;
+            this->particle.x  = this->particle.x < 0 ? -this->particle.x : 2 * size2- this->particle.x;
+            this->particle.vx = -this->particle.vx;
         }
-        while( this.particle.y < 0 || this.particle.y > size2 )
+        while( this->particle.y < 0 || this->particle.y > size2 )
         {
-            this.particle.y  = this.particle.y < 0 ? -this.particle.y : 2*size2-this.particle.y;
-            this.particle.vy = -this.particle.vy;
+            this->particle.y  = this->particle.y < 0 ? -this->particle.y : 2*size2-this->particle.y;
+            this->particle.vy = -this->particle.vy;
         }
     }
 };
