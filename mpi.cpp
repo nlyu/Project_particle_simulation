@@ -323,8 +323,8 @@ void exchange_moved(double size, imy_particle_t **local_particles_ptr,
 void scatter_particles(double size, imy_particle_t *particles, imy_particle_t *local_particles,
                        int *n_local_particles) {
     imy_particle_t *particles_by_bin = new imy_particle_t[n];
-    int *sendcnts = new int[n_proc];
-    int *displs = new int[n_proc];
+    int sendcnts[n_proc];
+    int displs[n_proc];
     if (rank == 0) {
         int i = 0;
         int cur_displs = 0;
@@ -344,14 +344,11 @@ void scatter_particles(double size, imy_particle_t *particles, imy_particle_t *l
             cur_displs += sendcnt;
         }
     }
-    MPI_Bcast(sendcnts, n_proc, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&sendcnts, n_proc, MPI_INT, 0, MPI_COMM_WORLD);
     *n_local_particles = sendcnts[rank];
-    MPI_Bcast(displs, n_proc, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Scatterv(particles_by_bin, sendcnts, displs, PARTICLE,
+    MPI_Bcast(&displs, n_proc, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Scatterv(particles_by_bin, &sendcnts, &displs, PARTICLE,
                  local_particles, *n_local_particles, PARTICLE, 0, MPI_COMM_WORLD);
-
-    delete[] sendcnts;
-    delete[] displs;
 }
 
 int main(int argc, char **argv)
