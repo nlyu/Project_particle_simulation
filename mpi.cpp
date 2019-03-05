@@ -89,6 +89,18 @@ class bin_t{
 public:
     std::list<imy_particle_t*> particles;
     std::list<imy_particle_t*> incoming;
+
+    void splice(){
+        this->particles.splice(bins[this->particles.end(), this->incoming);
+    }
+
+    void clear_incoming(){
+        this->incoming.clear();
+    }
+
+    void clear_particles(){
+        this->particles.clear();
+    }
 };
 
 bool operator<(const imy_particle_t &a, const imy_particle_t &b) {
@@ -465,8 +477,10 @@ int main(int argc, char **argv)
         }
 
         for (auto &b_it: local_bin_idxs) {
-            bins[b_it].particles.splice(bins[b_it].particles.end(), bins[b_it].incoming);
-            bins[b_it].incoming.clear();
+            bins[b_it].splice();
+            bins[b_it].clear_incoming();
+            //bins[b_it].particles.splice(bins[b_it].particles.end(), bins[b_it].incoming);
+            //bins[b_it].incoming.clear();
         }
 
         exchange_moved(size, &local_particles, bins, local_bin_idxs, &n_local_particles);
