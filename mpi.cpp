@@ -322,33 +322,32 @@ void exchange_moved(double size, imy_particle_t **local_particles_ptr,
 
 void scatter_particles(double size, imy_particle_t *particles, imy_particle_t *local_particles,
                        int *n_local_particles) {
-    imy_particle_t *particles_by_bin = new imy_particle_t[n];
+    int i = 0
+    int cur_displs = 0;
+    int sendcnt, r;
     int sendcnts[n_proc];
     int displs[n_proc];
-    if (rank == 0) {
-        int i = 0;
-        int cur_displs = 0;
-        for (int r = 0; r < n_proc; r++) {
-            int sendcnt = 0;
-            for (int k = 0; k < n; k++) {
-                particles[k].bin_idx = bin_of_particle(size, particles[k]);
-                int rb = rank_of_bin(particles[k].bin_idx);
-                if (rb == r) {
-                    particles_by_bin[i] = particles[k];
-                    sendcnt++;
-                    i++;
-                }
-            }
-            sendcnts[r] = sendcnt;
-            displs[r] = cur_displs;
-            cur_displs += sendcnt;
+
+    imy_particle_t *particles_by_bin = new imy_particle_t[n];
+    for (r = 0; r < n_proc && rank == 0; ++r) {
+        sendcnt = 0;
+        for (int k = 0; k < n; k++) {
+            particles[k].bin_idx = bin_of_particle(size, particles[k]);
+            int rb = rank_of_bin(particles[k].bin_idx);
+            if (rb != r)      continue;
+            particles_by_bin[i] = particles[k];
+            sendcnt++;
+            i++;
         }
+        sendcnts[r] = sendcnt;
+        displs[r] = cur_displs;
+        cur_displs += sendcnts[r];
     }
+
     MPI_Bcast(&sendcnts[0], n_proc, MPI_INT, 0, MPI_COMM_WORLD);
     *n_local_particles = sendcnts[rank];
     MPI_Bcast(&displs[0], n_proc, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Scatterv(particles_by_bin, &sendcnts[0], &displs[0], PARTICLE,
-                 local_particles, *n_local_particles, PARTICLE, 0, MPI_COMM_WORLD);
+    MPI_Scatterv(particles_by_bin, &sendcnts[0], &displs[0], PARTICLE, local_particles, *n_local_particles, PARTICLE, 0, MPI_COMM_WORLD);
 }
 
 int main(int argc, char **argv)
