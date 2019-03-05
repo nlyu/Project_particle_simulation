@@ -19,7 +19,7 @@
 
 #define imy_particle_t_offset(attr) ((size_t)&(((imy_particle_t*)0)->attr))
 #define imy_particle_t_particle_offset(attr) ((size_t)&(((imy_particle_t*)0)->particle.attr))
-#define for_bin(i, j)     for(int i = max(0, i - 1); i <= min(bins_per_side - 1, j + 1); ++i)
+#define for_bin(i, j)     for(int i = max(0, j - 1); i <= min(bins_per_side - 1, j + 1); ++i)
 
 int bins_per_side, n_bins, n_proc, rank, n, rows_per_proc;
 double size2;
