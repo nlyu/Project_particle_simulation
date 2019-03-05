@@ -56,8 +56,6 @@ int rows_per_proc;
 
 double size2;
 
-using namespace std;
-
 bool operator<(const imy_particle_t &a, const imy_particle_t &b) {
     return a.index < b.index;
 }
@@ -164,29 +162,52 @@ void init_iparticles(int n, double size, imy_particle_t *p) {
     free( shuffle );
 }
 
-int bin_of_particle(double size, imy_particle_t &particle) {
-    double sidelength = size / bins_per_side;
-    int b_row = (int)(particle.particle.x / sidelength);
-    int b_col = (int)(particle.particle.y / sidelength);
-    return b_row + b_col * bins_per_side;
+// int bin_of_particle(double size, imy_particle_t &particle) {
+//     double sidelength = size / bins_per_side;
+//     int b_row = (int)(particle.particle.x / sidelength);
+//     int b_col = (int)(particle.particle.y / sidelength);
+//     return b_row + b_col * bins_per_side;
+// }
+
+int bin_of_particle(double canvas_side_len, imy_particle_t &p) {
+    double bin_side_len = canvas_side_len / bins_per_side;
+    int row_b = floor(p.particle.x / bin_side_len), col_b = floor(p.particle.y / bin_side_len);
+    return row_b + col_b * bins_per_side;
 }
 
-std::vector<int> neighbors_of_rank(int rank) {
-    std::vector<int> neighbor_ranks;
-    if (rank > 0) {
-        neighbor_ranks.push_back(rank - 1);
-    }
-    if (rank < n_proc - 1) {
-        neighbor_ranks.push_back(rank + 1);
-    }
-    return neighbor_ranks;
+// std::vector<int> neighbors_of_rank(int rank) {
+//     std::vector<int> neighbor_ranks;
+//     if (rank > 0) {
+//         neighbor_ranks.push_back(rank - 1);
+//     }
+//     if (rank < n_proc - 1) {
+//         neighbor_ranks.push_back(rank + 1);
+//     }
+//     return neighbor_ranks;
+// }
+
+std::vector<int> get_rank_neighbors(int rank) {
+    std::vector<int> rank_neis;
+    if (rank > 0)
+        rank_neis.push_back(rank - 1);
+    if (rank + 1 < n_proc)
+        rank_neis.push_back(rank + 1);
+    return rank_neis;
 }
 
-void assign_particles_to_bins(int n, double size, imy_particle_t *particles, std::vector<bin_t> &bins) {
-    // Put each particle in its bin
-    for (int k = 0; k < n; k++) {
-        int b_idx = particles[k].particle.bin_idx = bin_of_particle(size, particles[k]);
-        bins[b_idx].particles.push_back(&particles[k]);
+
+// void assign_particles_to_bins(int n, double size, imy_particle_t *particles, std::vector<bin_t> &bins) {
+//     // Put each particle in its bin
+//     for (int k = 0; k < n; k++) {
+//         int b_idx = particles[k].particle.bin_idx = bin_of_particle(size, particles[k]);
+//         bins[b_idx].particles.push_back(&particles[k]);
+//     }
+// }
+
+void assign_particles_to_bins(int n, double canvas_side_len, imy_particle_t *particles, vector<bin_t> &bins) {
+    for (int i = 0; i < n; ++i) {
+        int b_idx = particles[i].particle.bin_idx = bin_of_particle(canvas_side_len, particles[i]);
+        bins[b_idx].particles.push_back(&particles[i]);
     }
 }
 
@@ -199,52 +220,88 @@ void init_bins(int n, double size, imy_particle_t *particles, std::vector<bin_t>
     assign_particles_to_bins(n, size, particles, bins);
 }
 
+// int rank_of_bin(int b_idx) {
+//     // 2D partitioning (still need to do)
+//     int b_row = b_idx % bins_per_side;
+//     return b_row / rows_per_proc;
+// }
+
 int rank_of_bin(int b_idx) {
-    // 2D partitioning (still need to do)
     int b_row = b_idx % bins_per_side;
     return b_row / rows_per_proc;
 }
 
-std::vector<int> bins_of_rank(int rank) {
+// std::vector<int> bins_of_rank(int rank) {
+//
+//     std::vector<int> result;
+//     for (int row = rank * rows_per_proc; row < min((rank + 1) * rows_per_proc, bins_per_side); row++) {
+//         for (int col = 0; col < bins_per_side; col++) {
+//             result.push_back(row + col * bins_per_side);
+//         }
+//     }
+//     return result;
+// }
 
-    std::vector<int> result;
-    for (int row = rank * rows_per_proc; row < min((rank + 1) * rows_per_proc, bins_per_side); row++) {
-        for (int col = 0; col < bins_per_side; col++) {
-            result.push_back(row + col * bins_per_side);
-        }
-    }
-    return result;
+std::vector<int> bins_of_rank(int rank) {
+    std::vector<int> res;
+    int row_s = rank * rows_per_proc,
+        row_e = min(bins_per_side, rows_per_proc * (rank + 1));
+    for (int row = row_s; row < row_e; ++row)
+        for (int col = 0; col < bins_per_side; ++col)
+            res.push_back(row + col * bins_per_side);
+    return res;
 }
 
-/** Returns the particles owned by the current rank in bins bordering on other_rank. */
-std::vector<imy_particle_t> border_particles_of_rank(int other_rank, std::vector<bin_t> &bins) {
-    int row;
-    if(other_rank < rank){
-        row = rank * rows_per_proc; // first row of rank
-    }else{
-        row = (rank + 1) * rows_per_proc - 1; // last row of rank, possibly out of bounds
-    }
+// /** Returns the particles owned by the current rank in bins bordering on other_rank. */
+// std::vector<imy_particle_t> border_particles_of_rank(int other_rank, std::vector<bin_t> &bins) {
+//     int row;
+//     if(other_rank < rank){
+//         row = rank * rows_per_proc; // first row of rank
+//     }else{
+//         row = (rank + 1) * rows_per_proc - 1; // last row of rank, possibly out of bounds
+//     }
+//
+//     std::vector<imy_particle_t> result;
+//     if(row >= 0 && row < bins_per_side){
+//         for(int col = 0; col < bins_per_side; col++){
+//             bin_t &b = bins[row + col * bins_per_side];
+//             int n_particles = 0;
+//             for (std::list<imy_particle_t*>::const_iterator it = b.particles.begin(); it != b.particles.end(); it++){
+//                 result.push_back(**it);
+//                 n_particles++;
+//             }
+//         }
+//     }
+//     return result;
+// }
 
-    std::vector<imy_particle_t> result;
-    if(row >= 0 && row < bins_per_side){
-        for(int col = 0; col < bins_per_side; col++){
-            bin_t &b = bins[row + col * bins_per_side];
-            int n_particles = 0;
-            for (std::list<imy_particle_t*>::const_iterator it = b.particles.begin(); it != b.particles.end(); it++){
-                result.push_back(**it);
-                n_particles++;
-            }
+
+std::vector<imy_particle_t> get_rank_border_particles(int nei_rank, std::vector<bin_t> &bins) {
+    int row;
+    if (nei_rank < rank) row = rank * rows_per_proc;
+    else row = rows_per_proc * (rank + 1) - 1;
+
+    std::vector<imy_particle_t> res;
+    if (row < 0 || row >= bins_per_side) return res;
+    for (int col = 0; col < bins_per_side; ++col) {
+        bin_t &b = bins[row + col * bins_per_side];
+        int n_particles = 0;
+        for (std::list<imy_particle_t*>::const_iterator it = b.particles.begin();
+            it != b.particles.end(); it++) {
+            res.push_back(**it);
+            n_particles++;
         }
+        assert(get_bin_rank(row + col * bins_per_side) == rank);
     }
-    return result;
+    return res;
 }
 
 void exchange_neighbors(double size, imy_particle_t *local_particles,
                         int *n_local_particles, std::vector<bin_t> &bins){
 
-    std::vector<int> neighbor_ranks = neighbors_of_rank(rank);
+    std::vector<int> neighbor_ranks = get_rank_neighbors(rank);
     for(int i = 0; i < neighbor_ranks.size(); ++i){
-        std::vector<imy_particle_t> border_particles = border_particles_of_rank(neighbor_ranks[i], bins);
+        std::vector<imy_particle_t> border_particles = get_rank_border_particles(neighbor_ranks[i], bins);
         MPI_Request request;
         if(border_particles.empty()){
             MPI_Ibsend(0, border_particles.size(), PARTICLE, neighbor_ranks[i], 0, MPI_COMM_WORLD, &request);
@@ -269,7 +326,7 @@ void exchange_neighbors(double size, imy_particle_t *local_particles,
 void exchange_moved(double size, imy_particle_t **local_particles_ptr,
                     std::vector<bin_t> &bins, std::vector<int> &local_bin_idxs,
                     int *n_local_particles) {
-    std::vector<int> neighbor_ranks = neighbors_of_rank(rank);
+    std::vector<int> neighbor_ranks = get_rank_neighbors(rank);
     for (int i = 0; i < neighbor_ranks.size(); i++) {
         std::vector<imy_particle_t> moved_particles;
         for (int b_idx = 0; b_idx < n_bins; b_idx++) {
