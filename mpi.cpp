@@ -414,14 +414,14 @@ int main(int argc, char **argv)
         }
 
         // Compute forces between each local bin and its neighbors
-        for (auto &idx:local_bin_idxs){
+        for (auto &idx: local_bin_idxs){
             int b1_row = idx % bins_per_side;
             int b1_col = idx / bins_per_side;
             for_bin(b2_row){
                 for_bin(b2_col){
                     int b2 = b2_row + b2_col * bins_per_side;
-                    for(auto &it1: bins[idx].particles){
-                        for (auto &it2: bins[b2].particles){
+                    for(std::list<imy_particle_t *> it1: bins[idx].particles){
+                        for (std::list<imy_particle_t *> it2: bins[b2].particles){
                              (it1)->apply_force((it2)->particle, &dmin, &davg, &navg);
                         }
                     }
