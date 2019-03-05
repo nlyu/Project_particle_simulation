@@ -18,7 +18,7 @@
 #define dt      0.0005
 
 #define imy_particle_t_offset(attr) ((size_t)&(((imy_particle_t*)0)->attr))
-#define imy_particle_t_particle_offset(attr) ((size_t)&(((imy_particle_t*)0)->particle.attr))
+// #define imy_particle_t_particle_offset(attr) ((size_t)&(((imy_particle_t*)0)->particle.attr))
 
 
 class my_particle_t{
@@ -35,7 +35,7 @@ public:
 
 class imy_particle_t{
 public:
-    my_particle_t particle;
+    // my_particle_t particle;
     int index;
     int bin_idx;
     double x, y, vx, vy, ax, ay;
@@ -384,15 +384,16 @@ void init_my_particle_type() {
     MPI_Datatype typs[5];
     MPI_Datatype temp;
     lens[0] = 1;
-    disp[0] = imy_particle_t_particle_offset(x); typs[0] = MPI_DOUBLE;
+    disp[0] = imy_particle_t_offset(x); typs[0] = MPI_DOUBLE;
     lens[1] = 1;
-    disp[1] = imy_particle_t_particle_offset(y); typs[1] = MPI_DOUBLE;
+    disp[1] = imy_particle_t_offset(y); typs[1] = MPI_DOUBLE;
     lens[2] = 1;
-    disp[2] = imy_particle_t_particle_offset(vx); typs[2] = MPI_DOUBLE;
+    disp[2] = imy_particle_t_offset(vx); typs[2] = MPI_DOUBLE;
     lens[3] = 1;
-    disp[3] = imy_particle_t_particle_offset(vy); typs[3] = MPI_DOUBLE;
+    disp[3] = imy_particle_t_offset(vy); typs[3] = MPI_DOUBLE;
     lens[4] = 1;
-    disp[4] = imy_particle_t_offset(index); typs[4] = MPI_INT;
+    disp[4] = imy_particle_t_offset(index);
+    typs[4] = MPI_INT;
     MPI_Type_create_struct(5, lens, disp, typs, &temp);
     MPI_Type_create_resized(temp, 0, sizeof(imy_particle_t), &PARTICLE);
     MPI_Type_commit(&PARTICLE);
