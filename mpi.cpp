@@ -344,10 +344,10 @@ void scatter_particles(double size, imy_particle_t *particles, imy_particle_t *l
             cur_displs += sendcnt;
         }
     }
-    MPI_Bcast(&sendcnts, n_proc, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&sendcnts[0], n_proc, MPI_INT, 0, MPI_COMM_WORLD);
     *n_local_particles = sendcnts[rank];
-    MPI_Bcast(&displs, n_proc, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Scatterv(particles_by_bin, &sendcnts, &displs, PARTICLE,
+    MPI_Bcast(&displs[0], n_proc, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Scatterv(particles_by_bin, &sendcnts[0], &displs[0], PARTICLE,
                  local_particles, *n_local_particles, PARTICLE, 0, MPI_COMM_WORLD);
 }
 
