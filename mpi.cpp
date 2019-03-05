@@ -529,7 +529,7 @@ int main(int argc, char **argv)
                          it1 != bins[b1].particles.end(); it1++) {
                         for (std::list<imy_particle_t*>::const_iterator it2 = bins[b2].particles.begin();
                              it2 != bins[b2].particles.end(); it2++) {
-                            apply_force2(*it1, *it2, &dmin, &davg, &navg);
+                            apply_force2(**it1, **it2, &dmin, &davg, &navg);
                         }
                     }
                 }
@@ -561,8 +561,8 @@ int main(int argc, char **argv)
             int b = *b_it;
             std::list<imy_particle_t*>::iterator it = bins[b].particles.begin();
             while (it != bins[b].particles.end()) {
-                imy_particle_t *p = *it;
-                move2(p->particle);
+                imy_particle_t p = **it;
+                move2(p);
                 int new_b_idx = bin_of_particle(size, *p);
                 if (new_b_idx != b) {
                     bin_t *new_bin = &bins[new_b_idx];
