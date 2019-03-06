@@ -89,6 +89,10 @@ public:
     std::list<imy_particle_t*> particles;
     std::list<imy_particle_t*> incoming;
 
+    void add_particles(imy_particle_t * p){
+        this->particles.push_back(p);
+    }
+
     void splice(){
         this->particles.splice(this->particles.end(), this->incoming);
     }
@@ -106,7 +110,13 @@ public:
         clear_incoming();
     }
 
-    void moved_particles_bin(std::vector<bin_t> &bins, int b_it){
+    void neighbor_particles(std::vector<imy_particle_t> &res){
+        for(auto &p: this->particles){
+            res.push_back(*p);
+        }
+    }
+
+    void moved_particles_in_bin(std::vector<bin_t> &bins, int b_it){
         auto it = this->particles.begin();
         while (it != this->particles.end()) {
             imy_particle_t *p = *it;
@@ -200,7 +210,8 @@ std::vector<int> get_rank_neighbors(int rank) {
 void assign_particles_to_bins(int n, double canvas_side_len, imy_particle_t *particles, std::vector<bin_t> &bins) {
     for (int i = 0; i < n; ++i) {
         int b_idx = particles[i].bin_idx = bin_of_particle(canvas_side_len, particles[i]);
-        bins[b_idx].particles.push_back(&particles[i]);
+        // bins[b_idx].particles.push_back(&particles[i]);
+        bins[b_idx].add_particles(&particles[i]);
     }
 }
 
@@ -239,12 +250,11 @@ std::vector<imy_particle_t> get_rank_border_particles(int nei_rank, std::vector<
     if (row < 0 || row >= bins_per_side) return res;
     for (int col = 0; col < bins_per_side; ++col) {
         bin_t &b = bins[row + col * bins_per_side];
-        int n_particles = 0;
-        for (std::list<imy_particle_t*>::const_iterator it = b.particles.begin();
-            it != b.particles.end(); it++) {
-            res.push_back(**it);
-            n_particles++;
-        }
+        b.neighbor_particles(res);
+        // for (std::list<imy_particle_t*>::const_iterator it = b.particles.begin();
+        //     it != b.particles.end(); it++) {
+        //     res.push_back(**it);
+        // }
     }
     return res;
 }
@@ -480,20 +490,7 @@ int main(int argc, char **argv)
 
         //  move particles
         for (auto &b_it: local_bin_idxs) {
-            // auto it = bins[b_it].particles.begin();
-            // while (it != bins[b_it].particles.end()) {
-            //     imy_particle_t *p = *it;
-            //     p->move();
-            //     int new_b_idx = bin_of_particle(size, *p);
-            //     if (new_b_idx != b_it) { //if particle is not in the same position
-            //         p->bin_idx = new_b_idx;
-            //         bins[b_it].particles.erase(it++);
-            //         bins[new_b_idx].incoming.push_back(p);
-            //     } else {
-            //         it++;
-            //     }
-            // }
-            bins[b_it].moved_particles_bin(bins, b_it);
+            bins[b_it].moved_particles_in_bin(bins, b_it);
         }
 
         for (auto &b_it: local_bin_idxs) {
