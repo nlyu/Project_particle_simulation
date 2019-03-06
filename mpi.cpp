@@ -251,10 +251,6 @@ std::vector<imy_particle_t> get_rank_border_particles(int nei_rank, std::vector<
     for (int col = 0; col < bins_per_side; ++col) {
         bin_t &b = bins[row + col * bins_per_side];
         b.neighbor_particles(res);
-        // for (std::list<imy_particle_t*>::const_iterator it = b.particles.begin();
-        //     it != b.particles.end(); it++) {
-        //     res.push_back(**it);
-        // }
     }
     return res;
 }
@@ -502,39 +498,39 @@ int main(int argc, char **argv)
         //
         //  save current step if necessary
         //
-        if (find_option(argc, argv, "-no") == -1) {
-            if (savename && (step % SAVEFREQ) == 0) {
-                int *local_particle_counts = 0;
-                if (rank == 0) {
-                    local_particle_counts = new int[n_proc];
-                }
-                MPI_Gather(&n_local_particles, 1, MPI_INT,
-                           local_particle_counts, 1, MPI_INT,
-                           0, MPI_COMM_WORLD);
-                int *displs = 0;
-                if (rank == 0) {
-                    displs = new int[n_proc];
-                    displs[0] = 0;
-                    for (int i = 1; i < n_proc; i++) {
-                        displs[i] = displs[i - 1] + local_particle_counts[i - 1];
-                    }
-                }
-                MPI_Gatherv(local_particles, n_local_particles, PARTICLE,
-                            particles, local_particle_counts, displs, PARTICLE,
-                            0, MPI_COMM_WORLD);
-                if (rank == 0) {
-                    std::sort(particles, particles + n);
-                    my_particle_t *particles_for_save = new my_particle_t[n];
-                    for (int i = 0; i < n; i++) {
-                        particles_for_save[i].x = particles[i].particle.x;
-                        particles_for_save[i].y = particles[i].particle.y;
-                    }
-                    save2(fsave, n, particles_for_save);
-                    delete[] particles_for_save;
-                    delete[] local_particle_counts;
-                }
-            }
-        }
+        // if (find_option(argc, argv, "-no") == -1) {
+        //     if (savename && (step % SAVEFREQ) == 0) {
+        //         int *local_particle_counts = 0;
+        //         if (rank == 0) {
+        //             local_particle_counts = new int[n_proc];
+        //         }
+        //         MPI_Gather(&n_local_particles, 1, MPI_INT,
+        //                    local_particle_counts, 1, MPI_INT,
+        //                    0, MPI_COMM_WORLD);
+        //         int *displs = 0;
+        //         if (rank == 0) {
+        //             displs = new int[n_proc];
+        //             displs[0] = 0;
+        //             for (int i = 1; i < n_proc; i++) {
+        //                 displs[i] = displs[i - 1] + local_particle_counts[i - 1];
+        //             }
+        //         }
+        //         MPI_Gatherv(local_particles, n_local_particles, PARTICLE,
+        //                     particles, local_particle_counts, displs, PARTICLE,
+        //                     0, MPI_COMM_WORLD);
+        //         if (rank == 0) {
+        //             std::sort(particles, particles + n);
+        //             my_particle_t *particles_for_save = new my_particle_t[n];
+        //             for (int i = 0; i < n; i++) {
+        //                 particles_for_save[i].x = particles[i].particle.x;
+        //                 particles_for_save[i].y = particles[i].particle.y;
+        //             }
+        //             save2(fsave, n, particles_for_save);
+        //             delete[] particles_for_save;
+        //             delete[] local_particle_counts;
+        //         }
+        //     }
+        // }
     }
     simulation_time = read_timer() - simulation_time;
 
