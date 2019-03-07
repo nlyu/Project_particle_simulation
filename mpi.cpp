@@ -171,7 +171,7 @@ void init_particles_mpi(int rank, int n, double size, my_particle_index *p) {
     free( shuffle );
 }
 
-int particle_bin(double canvas_side_len, imy_particle_t &p) {
+int particle_bin(double canvas_side_len, my_particle_index &p) {
     int bin_row = p.particle.x / (canvas_side_len / n_bins_side);
     int bin_col = p.particle.y / (canvas_side_len / n_bins_side);
     return bin_col * n_bins_side + bin_row;
@@ -193,9 +193,9 @@ std::vector<int> get_rank_neighbors(int rank) {
 //     }
 // }
 
-void assign_particles_to_bins(int n, double canvas_side_len, imy_particle_t *particles, std::vector<bin_t> &bins) {
+void assign_particles_to_bins(int n, double canvas_side_len, my_particle_index *particles, std::vector<bin_t> &bins) {
     for (int i = 0; i < n; ++i) {
-        imy_particle_t &p = particles[i];
+        my_particle_index &p = particles[i];
         int b_idx = particle_bin(canvas_side_len, p);
         p.bin_idx = particle_bin(canvas_side_len, p);
         bins[b_idx].add_particles(&p);
