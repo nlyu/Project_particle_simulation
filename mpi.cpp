@@ -86,18 +86,18 @@ public:
 class bin_t{
 public:
     std::list<my_particle_index*> particles;
-    std::list<my_particle_index*> incoming;
+    std::list<my_particle_index*> newparticles;
 
     void add_particles(my_particle_index * p){
         this->particles.push_back(p);
     }
 
     void splice(){
-        this->particles.splice(this->particles.end(), this->incoming);
+        this->particles.splice(this->particles.end(), this->newparticles);
     }
 
-    void clear_incoming(){
-        this->incoming.clear();
+    void clear_newparticles(){
+        this->newparticles.clear();
     }
 
     void clear_particles(){
@@ -106,7 +106,7 @@ public:
 
     void binning(){
         splice();
-        clear_incoming();
+        clear_newparticles();
     }
 
     void neighbor_particles(std::vector<my_particle_index> &res){
@@ -126,7 +126,7 @@ public:
             if (new_b_idx != b_it) { //if particle is not in the same position
                 p->bin_idx = new_b_idx;
                 this->particles.erase(it++);
-                bins[new_b_idx].incoming.push_back(p);
+                bins[new_b_idx].newparticles.push_back(p);
             } else {
                 it++;
             }
@@ -171,10 +171,10 @@ void init_particles_mpi(int rank, int n, double size, my_particle_index *p) {
     free( shuffle );
 }
 
-int bin_of_particle(double canvas_side_len, my_particle_index &p) {
-    double bin_side_len = canvas_side_len / n_bins_side;
-    int row_b = floor(p.particle.x / bin_side_len), col_b = floor(p.particle.y / bin_side_len);
-    return row_b + col_b * n_bins_side;
+int particle_bin(double canvas_side_len, imy_particle_t &p) {
+    int bin_row = p.particle.x / (canvas_side_len / n_bins_side);
+    int bin_col = p.particle.y / (canvas_side_len / n_bins_side);
+    return bin_col * n_bins_side + bin_row;
 }
 
 std::vector<int> get_rank_neighbors(int rank) {
@@ -186,10 +186,19 @@ std::vector<int> get_rank_neighbors(int rank) {
     return rank_neis;
 }
 
-void assign_particles_to_bins(int n, double canvas_side_len, my_particle_index *particles, std::vector<bin_t> &bins) {
+// void assign_particles_to_bins(int n, double canvas_side_len, my_particle_index *particles, std::vector<bin_t> &bins) {
+//     for (int i = 0; i < n; ++i) {
+//         int b_idx = particles[i].bin_idx = particle_bin(canvas_side_len, particles[i]);
+//         bins[b_idx].add_particles(&particles[i]);
+//     }
+// }
+
+void assign_particles_to_bins(int n, double canvas_side_len, imy_particle_t *particles, std::vector<bin_t> &bins) {
     for (int i = 0; i < n; ++i) {
-        int b_idx = particles[i].bin_idx = bin_of_particle(canvas_side_len, particles[i]);
-        bins[b_idx].add_particles(&particles[i]);
+        imy_particle_t &p = particles[i];
+        int b_idx = particle_bin(canvas_side_len, p);
+        p.bin_idx = particle_bin(canvas_side_len, p);
+        bins[b_idx].add_particles(&p);
     }
 }
 
@@ -311,7 +320,7 @@ int main(int argc, char **argv)
     for (int pro = cur_displs = counter = 0; pro < n_proc && rank == 0; cur_displs += counter_sends[pro], ++pro) {
         counter_send = 0;
         for (int i = 0; i < n; ++i) {
-            if (rank_of_bin(bin_of_particle(size, particles[i])) != pro)      continue;
+            if (rank_of_bin(particle_bin(size, particles[i])) != pro)      continue;
             particles_by_bin[counter] = particles[i];
             counter_send++;
             counter++;
@@ -411,7 +420,7 @@ int main(int argc, char **argv)
             std::vector<int> cur_bins = bins_of_rank(nei_rank);
             std::vector<my_particle_index> moved_particles;
             for (auto b_idx : cur_bins)
-                for(auto &p: bins[b_idx].incoming)
+                for(auto &p: bins[b_idx].newparticles)
                     moved_particles.push_back(*p);
             int n_moved_p = moved_particles.size();
             const void *buf = n_moved_p == 0 ? 0 : &moved_particles[0];
