@@ -186,13 +186,6 @@ std::vector<int> get_rank_neighbors(int rank) {
     return rank_neis;
 }
 
-// void assign_particles_to_bins(int n, double canvas_side_len, my_particle_index *particles, std::vector<bin_t> &bins) {
-//     for (int i = 0; i < n; ++i) {
-//         int b_idx = particles[i].bin_idx = particle_bin(canvas_side_len, particles[i]);
-//         bins[b_idx].add_particles(&particles[i]);
-//     }
-// }
-
 void assign_particles_to_bins(int n, double canvas_side_len, my_particle_index *particles, std::vector<bin_t> &bins) {
     for (int i = 0; i < n; ++i) {
         my_particle_index &p = particles[i];
@@ -348,7 +341,11 @@ int main(int argc, char **argv)
         davg = 0.0;
 
         // Populate bins with neighboring bins
-        std::vector<int> nei_ranks = get_rank_neighbors(rank);
+        std::vector<int> nei_ranks;
+        if (rank > 0)
+            nei_ranks.push_back(rank - 1);
+        if (rank + 1 < n_proc)
+            nei_ranks.push_back(rank + 1);
         for(auto &nei_rank : nei_ranks){
             std::vector<my_particle_index> border_particles = get_rank_border_particles(nei_rank, bins);
             int n_b_particles = border_particles.size();
@@ -415,7 +412,11 @@ int main(int argc, char **argv)
             bins[b_it].binning();
         }
 
-        std::vector<int> neighbor_ranks = get_rank_neighbors(rank);
+        std::vector<int> neighbor_ranks;
+        if (rank > 0)
+            neighbor_ranks.push_back(rank - 1);
+        if (rank + 1 < n_proc)
+            neighbor_ranks.push_back(rank + 1);
         for (auto &nei_rank : neighbor_ranks) {
             std::vector<int> cur_bins = bins_of_rank(nei_rank);
             std::vector<my_particle_index> moved_particles;
