@@ -1,0 +1,14 @@
+In order to use cuda you must first load the cuda module by running:
+'module load cuda'
+
+See https://portal.xsede.org/psc-bridges "Using Bridges GPU Nodes" for additional details.
+
+'autocorrect' is the program that checks whether your particles are interacting properly. If it prints an error, then your particles are not interacting properly.
+
+If you are using the autograder to check your performance, you will need to submit 'auto-bridges-gpu' and then run 'python gen_gpusum.py' to general summary statistics and grade your code.
+
+Note that 'auto-bridges-gpu' tests your GPU code against 'serial.cu'. Without any modifications, it tests the O(n^2) GPU code against the O(n^2) serial code that are already provided. 
+
+You will need to modify either 'auto-bridges-gpu' or replace 'gpu.cu' and 'serial.cu' with their O(n) versions. You should already have a working O(n) serial code from Part 1 of this assignment.
+
+We will be testing your code against an optimized, O(n), 'serial.cu' code. If you would like this optimized code to test against your GPU code, then please ask your instructor.
