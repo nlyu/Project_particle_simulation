@@ -88,7 +88,8 @@ __device__ void apply_force_gpu(particle_t &particle, particle_t &neighbor)
 
 __global__ void compute_forces_gpu(particle_t *particles,
                                    bin_t *d_bins,
-                                   int * d_n_bins, int d_bins_per_side) {
+                                   int *d_bins_id,
+                                   int d_n_bins, int d_bins_per_side) {
     // Get thread (bin) ID
     int b1 = threadIdx.x + blockIdx.x * blockDim.x;
     if (b1 >= d_n_bins) return;
@@ -148,7 +149,7 @@ __device__ void move_particle_gpu(particle_t &p, double d_size) {
 __global__ void move_gpu_my1 (particle_t *particles,
                                 bin_t *d_bins,
                                 double d_size,
-                                int *d_bins_id, int d_bins_per_side, int d_n_binsn int d_n) {
+                                int *d_bins_id, int d_bins_per_side, int d_n_bins, int d_n) {
     // Get thread (bin) ID
     int b = threadIdx.x + blockIdx.x * blockDim.x;
     if (b >= d_n_bins) return;
@@ -297,7 +298,7 @@ int main( int argc, char **argv )
         //
 
         int blks = (n_bins + NUM_THREADS - 1) / NUM_THREADS;
-        compute_forces_gpu <<< blks, NUM_THREADS >>> (d_particles, d_bins,
+        compute_forces_gpu <<< blks, NUM_THREADS >>> (d_particles, d_bins, d_bins_id,
                                                       n_bins, bins_per_side);
 
         //
