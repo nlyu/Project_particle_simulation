@@ -170,7 +170,7 @@ __global__ void move_gpu_my1 (particle_t *particles,
     d_bins[b].n_particles = 0;
     for (int p = 0; p < d_n; p++) {
         if(d_bins_id[p] == b){
-            d_bins[b].particles[bins[b].n_particles++] = p;
+            d_bins[b].particles[d_bins[b].n_particles++] = p;
         }
     }
 }
