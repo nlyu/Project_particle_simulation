@@ -145,7 +145,7 @@ __device__ void move_particle_gpu(particle_t &p, double d_size) {
     }
 }
 
-_global__ void move_gpu_my1 (particle_t *particles,
+__global__ void move_gpu_my1 (particle_t *particles,
                                 bin_t *d_bins,
                                 double d_size,
                                 int *d_bins_id, int d_bins_per_side, int d_n_bins) {
