@@ -310,7 +310,7 @@ int main( int argc, char **argv )
 
         //move_gpu_step1 <<< blks, NUM_THREADS >>> (d_particles, d_bins, size, bins_per_side, n_bins);
         //move_gpu_step2 <<< blks, NUM_THREADS >>> (d_particles, d_bins, size, bins_per_side, n_bins);
-        move_gpu_my1 <<< blks, NUM_THREADS >>> (d_particles, d_bins, size, d_bins_id, bins_per_side, n_bins, n);
+        move_gpu_my1 <<< blks, NUM_THREADS >>> (d_particles, d_bins, size, d_bins_id, bins_per_side, n_bins);
         binning <<< blks, NUM_THREADS >>> (d_particles, d_bins, d_bins_id, n);
         //
         //  save if necessary
