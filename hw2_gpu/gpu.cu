@@ -149,7 +149,7 @@ __device__ void move_particle_gpu(particle_t &p, double d_size) {
 __global__ void move_gpu_my1 (particle_t *particles,
                                 bin_t *d_bins,
                                 double d_size,
-                                int *d_bins_id, int d_bins_per_side, int d_n_bins, int d_n) {
+                                int *d_bins_id, int d_bins_per_side, int d_n_bins) {
     // Get thread (bin) ID
     int b = threadIdx.x + blockIdx.x * blockDim.x;
     if (b >= d_n_bins) return;
@@ -164,8 +164,11 @@ __global__ void move_gpu_my1 (particle_t *particles,
             d_bins_id[p_id] = new_b_idx;
         }
     }
+}
 
-    cudaThreadSynchronize();
+__global__ void binning (particle_t *particles,
+                         bin_t *d_bins, int * d_bins_id, int d_n){
+    int b = threadIdx.x + blockIdx.x * blockDim.x;
 
     d_bins[b].n_particles = 0;
     for (int p = 0; p < d_n; p++) {
@@ -308,6 +311,7 @@ int main( int argc, char **argv )
         //move_gpu_step1 <<< blks, NUM_THREADS >>> (d_particles, d_bins, size, bins_per_side, n_bins);
         //move_gpu_step2 <<< blks, NUM_THREADS >>> (d_particles, d_bins, size, bins_per_side, n_bins);
         move_gpu_my1 <<< blks, NUM_THREADS >>> (d_particles, d_bins, size, d_bins_id, bins_per_side, n_bins, n);
+        binning <<< blks, NUM_THREADS >>> (d_particles, d_bins, d_bins_id, n);
         //
         //  save if necessary
         //
