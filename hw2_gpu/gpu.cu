@@ -88,7 +88,7 @@ __device__ void apply_force_gpu(particle_t &particle, particle_t &neighbor)
 
 __global__ void compute_forces_gpu(particle_t *particles,
                                    bin_t *d_bins,
-                                   int d_n_bins, int d_bins_per_side) {
+                                   int * d_n_bins, int d_bins_per_side) {
     // Get thread (bin) ID
     int b1 = threadIdx.x + blockIdx.x * blockDim.x;
     if (b1 >= d_n_bins) return;
@@ -148,7 +148,7 @@ __device__ void move_particle_gpu(particle_t &p, double d_size) {
 __global__ void move_gpu_my1 (particle_t *particles,
                                 bin_t *d_bins,
                                 double d_size,
-                                int *d_bins_id, int d_bins_per_side, int d_n_bins) {
+                                int *d_bins_id, int d_bins_per_side, int d_n_binsn int d_n) {
     // Get thread (bin) ID
     int b = threadIdx.x + blockIdx.x * blockDim.x;
     if (b >= d_n_bins) return;
@@ -166,9 +166,9 @@ __global__ void move_gpu_my1 (particle_t *particles,
 
     cudaThreadSynchronize();
 
-    bins[b].n_particles = 0;
-    for (int p = 0; p < n; p++) {
-        if(bins_id[p] == b){
+    d_bins[b].n_particles = 0;
+    for (int p = 0; p < d_n; p++) {
+        if(d_bins_id[p] == b){
             d_bins[b].particles[bins[b].n_particles++] = p;
         }
     }
@@ -272,7 +272,7 @@ int main( int argc, char **argv )
 
     int * d_bins_id;
     cudaMalloc((void **) &d_bins_id, n * sizeof(int));
-    init_bins_id(n, particle, d_bins_id);
+    init_bins_id(n, particles, d_bins_id);
 
 
     cudaThreadSynchronize();   // Block until all preceeding tasks on all threads are done
@@ -306,7 +306,7 @@ int main( int argc, char **argv )
 
         //move_gpu_step1 <<< blks, NUM_THREADS >>> (d_particles, d_bins, size, bins_per_side, n_bins);
         //move_gpu_step2 <<< blks, NUM_THREADS >>> (d_particles, d_bins, size, bins_per_side, n_bins);
-        move_gpu_my1 <<< blks, NUM_THREADS >>> (d_particles, d_bins, d_bins_id, size, bins_per_side, n_bins);
+        move_gpu_my1 <<< blks, NUM_THREADS >>> (d_particles, d_bins, size, d_bins_id, bins_per_side, n_bins, n);
         //
         //  save if necessary
         //
