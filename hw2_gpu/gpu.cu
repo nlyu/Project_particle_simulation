@@ -17,8 +17,8 @@ struct bin_t {
     int n_staying;
     int n_leaving;
     int particles[];
-    int staying[32];
-    int leaving[32];
+    int staying[256];
+    int leaving[256];
 };
 
 __host__ int bin_of_particle(particle_t &particle) {
