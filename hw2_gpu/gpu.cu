@@ -1,45 +1,59 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <assert.h>
 #include <math.h>
 #include <cuda.h>
 #include "common.h"
 
-#define NUM_THREADS 256
+#ifdef __CUDACC__
+#define CUDA_CALLABLE_MEMBER __host__ __device__
+#else
+#define CUDA_CALLABLE_MEMBER
+#endif
 
-int bins_per_side;
-int n_bins;
+#define NUM_THREADS 16
+#define NUM_PARTICLE_BIN 32 //hardcoded looks fine. We assume there would be at most 64 particle in each bin
+#define get_bin(p, bins_num, s)   (int)(p.x / (double)(s / bins_num)) + (int)(p.y / (double)(s / bins_num)) * bins_num
 
 extern double size;
+int n_bins_side;
+int n_bins;
 
-struct bin_t {
+class bin_t {
+public:
     int n_particles;
-    int n_staying;
-    int n_leaving;
+    int n_no_change;
+    int n_change;
+    //particles in bin
     int particles[];
-    int staying[256];
-    int leaving[256];
+    //exchange bin recorder
+    int no_change[NUM_PARTICLE_BIN];
+    int change[NUM_PARTICLE_BIN];
+
+    bin_t(){
+        this->n_no_change = this->n_change = this->n_particles = 0;
+    }
+
+    void add(int par_id){
+        this->particles[this->n_particles] = par_id;
+        this->n_particles++;
+    }
+
+    CUDA_CALLABLE_MEMBER void update(int new_bin, int cur_bin, int p_id){
+        if (new_bin != cur_bin) {
+            this->change[this->n_change++] = p_id;
+        } else {
+            this->no_change[this->n_no_change++] = p_id;
+        }
+    }
+
+    ~bin_t(){
+        //no memory leak here
+    }
 };
-
-__host__ int bin_of_particle(particle_t &particle) {
-    double sidelength = size / bins_per_side;
-    int b_row = (int)(particle.x / sidelength);
-    int b_col = (int)(particle.y / sidelength);
-    return b_row + b_col * bins_per_side;
-}
-
-__device__ int bin_of_particle_gpu(particle_t &particle, double d_size, int d_bins_per_side) {
-    double sidelength = d_size / d_bins_per_side;
-    int b_row = (int)(particle.x / sidelength);
-    int b_col = (int)(particle.y / sidelength);
-    return b_row + b_col * d_bins_per_side;
-}
-
 
 //
 //  benchmarking program
 //
-
 __device__ void apply_force_gpu(particle_t &particle, particle_t &neighbor)
 {
     double dx = neighbor.x - particle.x;
@@ -59,39 +73,6 @@ __device__ void apply_force_gpu(particle_t &particle, particle_t &neighbor)
     particle.ay += coef * dy;
 }
 
-__global__ void compute_forces_gpu(particle_t *particles,
-                                   bin_t *d_bins,
-                                   int d_n_bins, int d_bins_per_side) {
-    // Get thread (bin) ID
-    int b1 = threadIdx.x + blockIdx.x * blockDim.x;
-    if (b1 >= d_n_bins) return;
-
-    int b1_row = b1 % d_bins_per_side;
-    int b1_col = b1 / d_bins_per_side;
-
-    for (int p1 = 0; p1 < d_bins[b1].n_particles; p1++) {
-        particles[d_bins[b1].particles[p1]].ax = particles[d_bins[b1].particles[p1]].ay = 0;
-    }
-
-    for (int b2_row = max(0, b1_row - 1);
-         b2_row <= min(d_bins_per_side - 1, b1_row + 1);
-         b2_row++) {
-        for (int b2_col = max(0, b1_col - 1);
-             b2_col <= min(d_bins_per_side - 1, b1_col + 1);
-             b2_col++) {
-            int b2 = b2_row + b2_col * d_bins_per_side;
-            for (int p1 = 0; p1 < d_bins[b1].n_particles; p1++) {
-                for (int p2 = 0; p2 < d_bins[b2].n_particles; p2++) {
-                    apply_force_gpu(particles[d_bins[b1].particles[p1]],
-                                    particles[d_bins[b2].particles[p2]]);
-                }
-            }
-        }
-    }
-
-    // Clear staying and leaving from previous iteration in preparation for move_gpu_step1
-    d_bins[b1].n_staying = d_bins[b1].n_leaving = 0;
-}
 
 __device__ void move_particle_gpu(particle_t &p, double d_size) {
     //
@@ -118,64 +99,100 @@ __device__ void move_particle_gpu(particle_t &p, double d_size) {
     }
 }
 
-__global__ void move_gpu_step1 (particle_t *particles,
-                                bin_t *d_bins,
-                                double d_size, int d_bins_per_side, int d_n_bins) {
+__global__ void compute_forces_gpu(particle_t *particles,
+                                   bin_t *d_bins,
+                                   int d_n_bins, int d_n_bins_side) {
     // Get thread (bin) ID
-    int b = threadIdx.x + blockIdx.x * blockDim.x;
-    if (b >= d_n_bins) return;
+    int cur_b = threadIdx.x + blockIdx.x * blockDim.x;
+    if (cur_b >= d_n_bins) return;
 
-    // Move this bin's particles to either leaving or staying
-    for (int p1 = 0; p1 < d_bins[b].n_particles; p1++) {
-        particle_t &p = particles[d_bins[b].particles[p1]];
-        move_particle_gpu(p, d_size);
-        int new_b_idx = bin_of_particle_gpu(p, d_size, d_bins_per_side);
-        if (new_b_idx != b) {
-            d_bins[b].leaving[d_bins[b].n_leaving++] = d_bins[b].particles[p1];
-        } else {
-            d_bins[b].staying[d_bins[b].n_staying++] = d_bins[b].particles[p1];
-        }
+    int cur_b_row = cur_b % d_n_bins_side;
+    int cur_b_col = cur_b / d_n_bins_side;
+
+    //clear the acceleration to zero
+    for (int p1 = 0; p1 < d_bins[cur_b].n_particles; p1++) {
+        particles[d_bins[cur_b].particles[p1]].ax = particles[d_bins[cur_b].particles[p1]].ay = 0;
     }
-    assert(d_bins[b].n_leaving < 32);
-    assert(d_bins[b].n_staying < 32);
-}
 
-__global__ void move_gpu_step2 (particle_t *particles,
-                                bin_t *d_bins,
-                                double d_size, int d_bins_per_side, int d_n_bins) {
-    // Get thread (bin) ID
-    int b = threadIdx.x + blockIdx.x * blockDim.x;
-    if (b >= d_n_bins) return;
-
-    // Consolidate staying and particles from neighbor bins' leaving
-    // lists. Assumes particles don't go so fast that they jump over bins.
-    for (int p1 = 0; p1 < d_bins[b].n_staying; p1++) {
-        d_bins[b].particles[p1] = d_bins[b].staying[p1];
-    }
-    d_bins[b].n_particles = d_bins[b].n_staying;
-
-    int b1_row = b % d_bins_per_side;
-    int b1_col = b / d_bins_per_side;
-    for (int b2_row = max(0, b1_row - 1);
-         b2_row <= min(d_bins_per_side - 1, b1_row + 1);
-         b2_row++) {
-        for (int b2_col = max(0, b1_col - 1);
-             b2_col <= min(d_bins_per_side - 1, b1_col + 1);
-             b2_col++) {
-            int b2 = b2_row + b2_col * d_bins_per_side;
-            for (int p2 = 0; p2 < d_bins[b2].n_leaving; p2++) {
-                particle_t &p = particles[d_bins[b2].leaving[p2]];
-                int new_b_idx = bin_of_particle_gpu(p, d_size, d_bins_per_side);
-                if (new_b_idx == b) {
-                    d_bins[b].particles[d_bins[b].n_particles++] = d_bins[b2].leaving[p2];
+    //nine bins, left to right, top do down
+    int x_idx[] = {cur_b_row-1, cur_b_row-1, cur_b_row-1, cur_b_row,   cur_b_row, cur_b_row,   cur_b_row+1, cur_b_row+1, cur_b_row+1};
+    int y_idx[] = {cur_b_col-1, cur_b_col,   cur_b_col+1, cur_b_col-1, cur_b_col, cur_b_col+1, cur_b_col-1,  cur_b_col,  cur_b_col+1};
+    for(int i = 0; i < 9; i++){
+        if(x_idx[i] >= 0 && x_idx[i] < d_n_bins_side && y_idx[i] >= 0 && y_idx[i] < d_n_bins_side){
+            int nei_b = x_idx[i] + y_idx[i] * d_n_bins_side; //get the neighbor bin
+            for (int p1 = 0; p1 < d_bins[cur_b].n_particles; p1++) {
+                for (int p2 = 0; p2 < d_bins[nei_b].n_particles; p2++) {
+                    //compute force between cur bin and neighbor bin
+                    apply_force_gpu(particles[d_bins[cur_b].particles[p1]],
+                                    particles[d_bins[nei_b].particles[p2]]);
                 }
             }
         }
     }
-    assert(d_bins[b].n_particles < 32);
 }
 
 
+__global__ void move_gpu (particle_t *particles,
+                                bin_t *d_bins,
+                                double d_size, int d_n_bins_side, int d_n_bins) {
+    // Get thread (bin) ID
+    int cur_b = threadIdx.x + blockIdx.x * blockDim.x;
+    if (cur_b >= d_n_bins) return;
+
+    d_bins[cur_b].n_no_change = d_bins[cur_b].n_change = 0;
+
+    // move the particle
+    for (int p_id = 0; p_id < d_bins[cur_b].n_particles; p_id++) {
+        //move the particle to new bin
+        int p_new = d_bins[cur_b].particles[p_id];
+        particle_t &p = particles[p_new];
+        move_particle_gpu(p, d_size);
+        // record the state of the partivle
+        int new_b_idx = get_bin(p, d_n_bins_side, d_size);
+        // check whether the partivle move to a new bin
+        if (new_b_idx != cur_b) {
+            d_bins[cur_b].change[d_bins[cur_b].n_change++] = p_new;
+        } else {
+            d_bins[cur_b].no_change[d_bins[cur_b].n_no_change++] = p_new;
+        }
+        //d_bins[cur_b].update(new_b_idx, cur_b, p_new);
+    }
+}
+
+__global__ void binning (particle_t *particles,
+                                bin_t *d_bins,
+                                double d_size, int d_n_bins_side, int d_n_bins) {
+    // Get thread bin ID
+    int cur_b = threadIdx.x + blockIdx.x * blockDim.x;
+    if (cur_b >= d_n_bins) return;
+
+    // Saves the particle that stays in the bin
+    d_bins[cur_b].n_particles = d_bins[cur_b].n_no_change;
+    for (int p1 = 0; p1 < d_bins[cur_b].n_particles; p1++) {
+        d_bins[cur_b].particles[p1] = d_bins[cur_b].no_change[p1];
+    }
+
+    // accept the incoming particle to the bin
+    int cur_b_row = cur_b % d_n_bins_side;
+    int cur_b_col = cur_b / d_n_bins_side;
+
+    int x_idx[] = {cur_b_row-1, cur_b_row-1, cur_b_row-1, cur_b_row,   cur_b_row, cur_b_row,   cur_b_row+1, cur_b_row+1, cur_b_row+1};
+    int y_idx[] = {cur_b_col-1, cur_b_col,   cur_b_col+1, cur_b_col-1, cur_b_col, cur_b_col+1, cur_b_col-1,  cur_b_col,  cur_b_col+1};
+    for(int i = 0; i < 9; i++){
+        //check out of border
+        if(x_idx[i] >= 0 && x_idx[i] < d_n_bins_side && y_idx[i] >= 0 && y_idx[i] < d_n_bins_side){
+            int nei_bin = x_idx[i] + y_idx[i] * d_n_bins_side;
+            //get the incoming particles to the current bin
+            for (int p2 = 0; p2 < d_bins[nei_bin].n_change; p2++) {
+                int par_comming = d_bins[nei_bin].change[p2];
+                particle_t &p = particles[par_comming];
+                if (get_bin(p, d_n_bins_side, d_size == cur_b)) { //find the particle from the neighbor that arrives in the cur bin
+                    d_bins[cur_b].particles[d_bins[cur_b].n_particles++] = par_comming;
+                }
+            }
+        }
+    }
+}
 
 int main( int argc, char **argv )
 {
@@ -207,19 +224,20 @@ int main( int argc, char **argv )
     init_particles( n, particles );
 
     cudaThreadSynchronize();
-    bins_per_side = size / (0.01 * 3);
-    n_bins = bins_per_side * bins_per_side;
+
+    //set bins
+    n_bins_side = size / 0.03;
+    n_bins = n_bins_side * n_bins_side;
 
     bin_t * d_bins;
     cudaMalloc((void **) &d_bins, n_bins * sizeof(bin_t));
+
+    //initialize bins
     bin_t * bins = new bin_t[n_bins];
-    for (int b = 0; b < n_bins; b++) {
-        bins[b].n_particles = 0;
-    }
-    // Assign each particle to a bin
-    for (int k = 0; k < n; k++) {
-        int b_idx = bin_of_particle(particles[k]);
-        bins[b_idx].particles[bins[b_idx].n_particles++] = k;
+    //distribute each particle to a bin
+    for (int i = 0; i < n; i++) {
+        int b_idx = get_bin(particles[i], n_bins_side, size);
+        bins[b_idx].add(i);
     }
     // Copy host bins to device
     cudaMemcpy(d_bins, bins, n_bins * sizeof(bin_t), cudaMemcpyHostToDevice);
@@ -246,17 +264,18 @@ int main( int argc, char **argv )
         //
         //  compute forces
         //
-
         int blks = (n_bins + NUM_THREADS - 1) / NUM_THREADS;
         compute_forces_gpu <<< blks, NUM_THREADS >>> (d_particles, d_bins,
-                                                      n_bins, bins_per_side);
+                                                      n_bins, n_bins_side);
 
         //
         //  move particles
         //
-        move_gpu_step1 <<< blks, NUM_THREADS >>> (d_particles, d_bins, size, bins_per_side, n_bins);
-        move_gpu_step2 <<< blks, NUM_THREADS >>> (d_particles, d_bins, size, bins_per_side, n_bins);
+        //printf("I have %d\n", blks);
+        move_gpu <<< blks, NUM_THREADS >>> (d_particles, d_bins, size, n_bins_side, n_bins);
 
+        //cannot combine move_gpu() and bining() into one step...need block sync which __syncthreads() cannot achieve
+        binning <<< blks, NUM_THREADS >>> (d_particles, d_bins, size, n_bins_side, n_bins);
         //
         //  save if necessary
         //
@@ -266,6 +285,7 @@ int main( int argc, char **argv )
             save( fsave, n, particles);
         }
     }
+
     cudaThreadSynchronize();
     simulation_time = read_timer( ) - simulation_time;
 
