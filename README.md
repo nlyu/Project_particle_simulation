@@ -7,6 +7,9 @@ cs267 hw2
 Nuochen Lyu 
 Xiaoyun Zhao
 
+Final Result
+![Result](https://github.com/nlyu/Project_particle_simulation/blob/master/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202019-03-30%20%E4%B8%8B%E5%8D%889.53.54.png)
+
 # Set up and run
 
 Login to cori or any super computer center. For CUDA part you need CMU PSC bridge computer.
