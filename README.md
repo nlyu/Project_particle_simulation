@@ -24,7 +24,7 @@ Run: See Job-block
 
 # Overview
 
-[Link for Complete Info and detail](https://sites.google.com/lbl.gov/cs267-spr2019/hw-2?authuser=0)
+[Link for More Info and detail](https://sites.google.com/lbl.gov/cs267-spr2019/hw-2?authuser=0)
 
 Part1: Openmp, multi-thread for particle interaction [Report Link](https://docs.google.com/document/d/1TtZm3EWSEm7xQ7od3GWZEeGk8oU9POQuhkM0uKdlBAo/edit?usp=sharing)
 
